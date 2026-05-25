@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ConferenceController;
 use App\Http\Middleware\AdminAuth;
 
 Route::get('/inscription', [App\Http\Controllers\InscriptionController::class, 'index']);
@@ -25,3 +27,6 @@ Route::post('/buy', function (\Illuminate\Http\Request $request) {
 Route::get('/buy', function () {
     return view('buy-amount');
 });
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
