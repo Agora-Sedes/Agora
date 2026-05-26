@@ -8,8 +8,7 @@ class ConferenceController extends Controller
 {
     public function show(int $id)
     {
-      //datos hardcodeados de prueba a reemplazar mas proximo a la fecha del event
-      //futuro jornadas php asi no tenemos este sida. esto es para la beta ananashe
+      // Datos hardcodeados de prueba a reemplazar mas proximo a la fecha del evento futuro
         $jornadas = [
             1 => [
                 'id'          => 1,
