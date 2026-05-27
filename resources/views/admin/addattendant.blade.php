@@ -1,4 +1,5 @@
 <div>
+    <h2>Agregar inscripto de ultimo momento</h2>
     <form action="" method="post">
         @csrf
         <label for="name">Nombre:</label>
