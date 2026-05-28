@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->status()->enum(['done', 'pending', 'invalid']);
-            $table->method()->enum(['mercadopago', 'cash']);
+            $table->enum('status', ['done', 'pending', 'invalid'])->default('pending');
+            $table->enum('method', ['mercadopago', 'cash']);
             $table->decimal('amount', 10, 3)->unsigned();
         });
     }
