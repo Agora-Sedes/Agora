@@ -6,32 +6,32 @@
 # Open a browser in the URL http://localhost:8000 to see the app
 version: "3"
 services:
-  app:
-    build: .
-    depends_on:
-      database:
-          condition: service_healthy
-      mailpit:
-          condition: service_started
-    ports:
-      - "8000:8000"
-      - "5173:5173"
-    volumes:
-      - .:/app
-      # Store database in production
-  database:
-    image: mariadb:lts-ubi
-    environment:
-      MARIADB_ROOT_PASSWORD: password
-      # Change this in production (also on the .env)
-    healthcheck:
-        test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
-        start_period: 10s
-  mailpit:
-    image: axllent/mailpit:v1.29
-    # 1025 is automatically routed
-    ports:
-      - "8025:8025"
+    app:
+        build: .
+        depends_on:
+            database:
+                condition: service_healthy
+            mailpit:
+                condition: service_started
+        ports:
+            - "8000:8000"
+            - "5173:5173"
+        volumes:
+            - .:/app
+            # Store database in production
+    database:
+        image: mariadb:lts-ubi
+        environment:
+            MARIADB_ROOT_PASSWORD: password
+            # Change this in production (also on the .env)
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+    mailpit:
+        image: axllent/mailpit:v1.29
+        # 1025 is automatically routed
+        ports:
+            - "8025:8025"

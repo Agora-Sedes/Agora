@@ -6,10 +6,6 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    /**
-     * Listado de jornadas próximas.
-     * TODO: Reemplazar con consulta a DB cuando esté disponible.
-     */
     public function index()
     {
         $jornadas = collect([
