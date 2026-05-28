@@ -19,19 +19,29 @@ services:
     volumes:
       - .:/app
       # Store database in production
+    networks:
+      - app-network
   database:
     image: mariadb:lts-ubi
     environment:
       MARIADB_ROOT_PASSWORD: password
       # Change this in production (also on the .env)
+    networks:
+      - app-network
     healthcheck:
         test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
         interval: 10s
         timeout: 5s
         retries: 5
         start_period: 10s
+      
   mailpit:
     image: axllent/mailpit:v1.29
     # 1025 is automatically routed
     ports:
       - "8025:8025"
+    networks:
+      - app-network
+
+networks:
+  app-network:
