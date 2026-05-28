@@ -19,7 +19,7 @@ class VerifyPaymentMail extends Mailable
     public function __construct(public readonly string $inscriptionId)
     {
         $this->verificationUrl =
-            env('AGORA_URL') . "/verify-payment/irl/{$this->inscriptionId}";
+            env('APP_URL') . "/verify-payment/irl/{$this->inscriptionId}";
 
         $this->qrCode = base64_encode(
             QrCode::format('png')
