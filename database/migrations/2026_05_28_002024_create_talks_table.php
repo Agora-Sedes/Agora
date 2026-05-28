@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('talks', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->foreignId('conference_id')->constrained('conferences');
+            $table->string('title');
+            $table->text('description');
+            $table->dateTime('starts_at');
+            $table->dateTime('ends_at');
+            $table->string('speaker');
+            $table->text('speaker_background');
         });
     }
 
