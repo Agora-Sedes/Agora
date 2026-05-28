@@ -15,6 +15,9 @@ Route::post('/logout', LogoutController::class)->name('logout');
 
 Route::middleware(AdminAuth::class)->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::view('/addattendant', 'admin.addattendant')->name('addattendant');
+    Route::view('/attendants', 'admin.attendants')->name('attendants');
+    Route::view('/qrscan', 'admin.qrscan')->name('qrscan');
 });
 
 Route::post('/buy', function (\Illuminate\Http\Request $request) {
