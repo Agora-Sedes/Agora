@@ -3,7 +3,13 @@ FROM alpine:latest
 RUN apk add --no-cache \
       composer git \
       npm nodejs \
-      php84 php84-fpm php84-mysqli php84-pdo_mysql php84-mbstring php84-xml php84-curl php84-fileinfo php84-bcmath php84-tokenizer php84-session php84-ctype php84-dom php84-xmlwriter php84-simplexml php84-pcntl php84-intl;
+      php84 php84-fpm php84-mysqli php84-pdo_mysql \
+      php84-mbstring php84-xml php84-curl php84-fileinfo \
+      php84-bcmath php84-tokenizer php84-session php84-ctype \
+      php84-dom php84-xmlwriter php84-simplexml php84-pcntl \
+      php84-intl php84-pecl-imagick;
+
+RUN echo "extension=imagick" > /etc/php84/conf.d/imagick.ini
 
 # PHP settings that are nice to have
 RUN cat >> /etc/php84/php.ini <<EOF
