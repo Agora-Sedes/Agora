@@ -141,6 +141,6 @@ class ConferenceController extends Controller
 
         $jornada = $jornadas[$id];
 
-        return view('conferences.show', compact('jornada'));
+        return view('show', compact('jornada'));
     }
 }

@@ -10,33 +10,27 @@
 </head>
 <body>
 
-    {{-HEADER-}}
     <header>
         <div>
 
-            {{-Logo-}}
             <a href="{{ route('home') }}" aria-label="Inicio">
-                {{-Ícono-}}
+                
                 <div>
                 </div>
-                {{-Texto-}}
+                
                 <div class="leading-tight">
                     <span>Ágora</span>
                     <span>Sedes Sapientiae</span>
                 </div>
             </a>
-
-            {{-Acción derecha (Intranet)-}}
             @yield('header_action')
         </div>
     </header>
 
-    {{-CONTENIDO-}}
     <main>
         @yield('content')
     </main>
 
-    {{-FOOTER-}}
     <footer>
         <div>
             <p>© {{ date('Y') }} Sedes Sapientiae · Todos los derechos reservados</p>
