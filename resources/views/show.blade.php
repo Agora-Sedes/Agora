@@ -1,7 +1,7 @@
 @extends('app')
 
-@section('title', $jornada['nombre'])
-@section('meta_description', $jornada['descripcion'])
+@section('title', $conference['name'])
+@section('meta_description', $conference['description'])
 
 @section('header_action')
     <a
@@ -22,31 +22,31 @@
             <div>
                 <span>
                     {{
-                        \Carbon\Carbon::parse($jornada['fecha'])
+                        \Carbon\Carbon::parse($conference['date'])
                             ->locale('es')
                             ->isoFormat('dddd D [de] MMMM [de] YYYY')
                     }}
                 </span>
                 <span>
-                    {{ $jornada['lugar'] }}
+                    {{ $conference['place'] }}
                 </span>
             </div>
 
 
             <h1>
-                {{ $jornada['nombre'] }}
+                {{ $conference['name'] }}
             </h1>
 
 
-            @if (!empty($jornada['descripcion']))
+            @if (!empty($conference['description']))
                 <p>
-                    {{ $jornada['descripcion'] }}
+                    {{ $conference['description'] }}
                 </p>
             @endif
 
 
             <p>
-                {{ count($jornada['charlas']) }} {{ count($jornada['charlas']) === 1 ? 'charla' : 'charlas' }} en el programa
+                {{ count($conference['talks']) }} {{ count($conference['talks']) === 1 ? 'talk' : 'talks' }} en el programa
             </p>
         </div>
     </section>
@@ -56,20 +56,20 @@
 
         <h2>Itinerario</h2>
 
-        @if (empty($jornada['charlas']))
+        @if (empty($conference['talks']))
             <p>Próximamente se publicará el programa de charlas.</p>
         @else
-            <div id="acordeon-charlas">
+            <div id="acordeon-talks">
 
-                @foreach ($jornada['charlas'] as $index => $charla)
-                    <div class="charla-item" id="charla-{{ $charla['id'] }}">
+                @foreach ($conference['talks'] as $index => $talk)
+                    <div class="talk-item" id="talk-{{ $talk['id'] }}">
 
 
                         <button
                             type="button"
                             aria-expanded="false"
-                            aria-controls="charla-body-{{ $charla['id'] }}"
-                            onclick="toggleCharla(this)"
+                            aria-controls="talk-body-{{ $talk['id'] }}"
+                            onclick="toggleTalk(this)"
                         >
 
                             <span>
@@ -79,15 +79,15 @@
 
                             <div>
                                 <span>
-                                    {{ $charla['titulo'] }}
+                                    {{ $talk['title'] }}
                                 </span>
                                 <span>
-                                    @if (!empty($charla['hora_inicio']))
-                                        {{ $charla['hora_inicio'] }}{{ !empty($charla['hora_fin']) ? ' – ' . $charla['hora_fin'] : '' }}
-                                        @if (!empty($charla['ponente'])) · @endif
+                                    @if (!empty($talk['hour_begin']))
+                                        {{ $talk['hour_begin'] }}{{ !empty($talk['hour_end']) ? ' – ' . $talk['hour_end'] : '' }}
+                                        @if (!empty($talk['talker'])) · @endif
                                     @endif
-                                    @if (!empty($charla['ponente']))
-                                        {{ $charla['ponente'] }}
+                                    @if (!empty($talk['talker']))
+                                        {{ $talk['talker'] }}
                                     @endif
                                 </span>
                             </div>
@@ -95,14 +95,14 @@
 
 
                         <div
-                            id="charla-body-{{ $charla['id'] }}"
+                            id="talk-body-{{ $talk['id'] }}"
                             role="region"
                         >
                             <div>
 
-                                @if (!empty($charla['abstract']))
+                                @if (!empty($talk['abstract']))
                                     <p>
-                                        {{ $charla['abstract'] }}
+                                        {{ $talk['abstract'] }}
                                     </p>
                                 @else
                                     <p>Abstract no disponible.</p>
@@ -110,14 +110,14 @@
 
 
                                 <div>
-                                    @if (!empty($charla['ponente']))
+                                    @if (!empty($talk['talker']))
                                         <span>
-                                            {{ $charla['ponente'] }}
+                                            {{ $talk['talker'] }}
                                         </span>
                                     @endif
-                                    @if (!empty($charla['hora_inicio']))
+                                    @if (!empty($talk['hour_begin']))
                                         <span>
-                                            {{ $charla['hora_inicio'] }}{{ !empty($charla['hora_fin']) ? ' – ' . $charla['hora_fin'] : '' }}
+                                            {{ $talk['hour_begin'] }}{{ !empty($talk['hour_end']) ? ' – ' . $talk['hour_end'] : '' }}
                                         </span>
                                     @endif
                                 </div>
@@ -140,8 +140,8 @@
                 Asegurá tu lugar en la jornada. La inscripción es gratuita y está sujeta a disponibilidad de cupos.
             </p>
             <a
-                id="btn-inscribirse-{{ $jornada['id'] }}"
-                href="/inscripciones/{{ $jornada['id'] }}"
+                id="btn-inscription-{{ $conference['id'] }}"
+                href="/inscriptions/{{ $conference['id'] }}"
             >
                 Inscribirme
             </a>
@@ -152,19 +152,13 @@
 
 @push('scripts')
 <script>
-    /**
-     * Acordeón de charlas — JS vanilla sin dependencias externas.
-     * Abre/cierra individualmente; puede adaptarse a "solo uno abierto" si se desea.
-     */
-    function toggleCharla(btn) {
-        const expanded = btn.getAttribute('aria-expanded') === 'true';
-        const bodyId   = btn.getAttribute('aria-controls');
-        const body     = document.getElementById(bodyId);
-        const arrow    = btn.querySelector('.charla-arrow');
+    function toggleTalk(btn) {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    const bodyId   = btn.getAttribute('aria-controls');
+    const body     = document.getElementById(bodyId);
 
-        btn.setAttribute('aria-expanded', String(!expanded));
-        body.classList.toggle('hidden', expanded);
-        arrow.style.transform = expanded ? '' : 'rotate(180deg)';
-    }
+    btn.setAttribute('aria-expanded', String(!expanded));
+    body.style.display = expanded ? 'none' : 'block';
+}
 </script>
 @endpush

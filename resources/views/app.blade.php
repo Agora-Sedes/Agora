@@ -6,7 +6,6 @@
     <title>@yield('title', 'Ágora') – Sedes Sapientiae</title>
     <meta name="description" content="@yield('meta_description', 'Jornadas académicas de la Facultad Sedes Sapientiae')">
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
 

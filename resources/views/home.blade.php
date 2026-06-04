@@ -35,7 +35,7 @@
 
     <section>
 
-        @if ($jornadas->isEmpty())
+        @if ($conferences->isEmpty())
 
             <div>
                 <h2>No hay jornadas programadas</h2>
@@ -43,11 +43,11 @@
             </div>
         @else
             <div>
-                @foreach ($jornadas as $jornada)
+                @foreach ($conferences as $conference)
                     <a
-                        id="jornada-{{ $jornada['id'] }}"
-                        href="{{ route('conferences.show', $jornada['id']) }}"
-                        aria-label="ver detalle: {{ $jornada['nombre'] }}"
+                        id="conference-{{ $conference['id'] }}"
+                        href="{{ route('conferences.show', $conference['id']) }}"
+                        aria-label="ver detalle: {{ $conference['name'] }}"
                     >
                         <div>
 
@@ -57,29 +57,29 @@
                                 <div>
                                     <span>
                                         {{
-                                            \Carbon\Carbon::parse($jornada['fecha'])
+                                            \Carbon\Carbon::parse($conference['date'])
                                                 ->locale('es')
                                                 ->isoFormat('D [de] MMMM [de] YYYY')
                                         }}
                                     </span>
                                     <span>
-                                        {{ $jornada['lugar'] }}
+                                        {{ $conference['place'] }}
                                     </span>
                                 </div>
 
 
                                 <h2>
-                                    {{ $jornada['nombre'] }}
+                                    {{ $conference['name'] }}
                                 </h2>
 
 
                                 <p>
-                                    {{ $jornada['descripcion'] }}
+                                    {{ $conference['description'] }}
                                 </p>
 
 
                                 <p>
-                                    {{ $jornada['charlas_count'] }} {{ $jornada['charlas_count'] === 1 ? 'charla' : 'charlas' }}
+                                    {{ $conference['talk_count'] }} {{ $conference['talk_count'] === 1 ? 'talk' : 'talk' }}
                                 </p>
                             </div>
 
