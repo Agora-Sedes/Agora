@@ -38,4 +38,4 @@ HEALTHCHECK --interval=5m --timeout=3s --start-period=30s --retries=5 \
   CMD curl --head --fail-with-body http://localhost:8000
 
 WORKDIR /app
-CMD ["/bin/sh", "-c", "php artisan migrate --force && composer run dev"]
+CMD ["/bin/sh", "-c", "php artisan migrate:fresh --force --seed && composer run dev"]

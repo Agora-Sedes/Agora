@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -11,8 +12,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[WithoutTimestamps]
 class Conference extends Model
 {
+    use HasFactory;
+
     public function attendants(): HasMany {
         return $this->hasMany(Attendant::class)->chaperone();
+    }
+
+    public function talks(): HasMany {
+        return $this->hasMany(Talk::class)->chaperone();
     }
 
     protected function casts(): array {
