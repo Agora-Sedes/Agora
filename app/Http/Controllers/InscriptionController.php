@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VerifyPaymentMail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class InscriptionController extends Controller
 {
@@ -21,7 +23,16 @@ class InscriptionController extends Controller
             'participants.*.dni' => 'required|string|max:255',
             'participants.*.email' => 'required|email|max:255',
             'participants.*.phone' => 'required|string|max:50',
+            'participants.*.mode' => 'required|in:presencial,virtual',
+            'payment_method' => 'required|in:cash,mp',
         ]);
+
+        if ($request->input('payment_method') === 'cash') {
+            foreach ($data['participants'] as $participant) {
+                $inscriptionId = md5($participant['dni']);
+                Mail::to($participant['email'])->send(new VerifyPaymentMail($inscriptionId));
+            }
+        }
 
         return view('inscription-confirmation', ['participants' => $data['participants']]);
     }

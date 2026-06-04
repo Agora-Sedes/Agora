@@ -3,6 +3,7 @@
     <form action="/inscription" method="POST">
         @csrf
 
+        <input type="hidden" name="payment_method" value="{{ $method }}">
         @for ($i = 0; $i < $quantity; $i++)
             <fieldset style="margin-bottom: 30px; padding: 15px; border: 1px solid #ccc;">
                 <legend>Persona {{ $i + 1 }}</legend>
