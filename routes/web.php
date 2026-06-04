@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ConferenceController;
 use App\Http\Middleware\AdminAuth;
+use Illuminate\Http\Request;
 use App\Mail\VerifyAssistanceMail;
 use Illuminate\Support\Facades\Mail;
 
@@ -22,6 +23,7 @@ Route::middleware(AdminAuth::class)->group(function () {
     Route::view('/attendants', 'admin.attendants')->name('attendants');
     Route::view('/qrscan', 'admin.qrscan')->name('qrscan');
 });
+
 
 Route::post('/buy', function (\Illuminate\Http\Request $request) {
     $quantity = $request->input('entry', 1);

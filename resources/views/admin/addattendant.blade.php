@@ -12,5 +12,6 @@
         <input type="email" id="email" name="email" required><br><br>
         <label for="phone">Telefono:</label>
         <input type="text" id="phone" name="phone" required><br><br>
+        <button type="submit">Agregar Inscripto</button>
     </form>
 </div>
