@@ -18,7 +18,7 @@ class LoginController extends Controller
             session(['auth_admin'=>true]);
             $request->session()->regenerate();
 
-            return redirect()->intended('/dashboard');
+            return redirect()->intended('/conference-selector');
         }
 
         return back()->withErrors([
