@@ -1,15 +1,12 @@
 <div>
     <div>
         <h2>Seleccionar Conferencia</h2>
-        <form action="" method="post">
             @csrf
-            <label for="conference">Conferencia:</label>
-            <select id="conference" name="conference" required>
-                @foreach($conferences as $conference)
-                    <option value="{{ $conference->id }}">Tu mama es mi novia</option>
-                @endforeach
-            </select><br><br>
-            <button type="submit">Seleccionar Conferencia</button>
-        </form>
-    </div><!-- Breathing in, I calm body and mind. Breathing out, I smile. - Thich Nhat Hanh -->
+            @php $conferences=[["name" => "Conferencia 1"], ["name" => "Conferencia 2"]]; @endphp
+            @foreach($conferences as $conference)
+                 <div>
+                    <a href="{{ route('dashboard', ['name' => $conference['name']]) }}">{{ $conference['name'] }}</a>
+                </div>
+             @endforeach
+    </div>
 </div>
