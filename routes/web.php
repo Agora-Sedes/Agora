@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Middleware\AdminAuth;
-use App\Mail\VerifyAssistanceMail;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 Route::get('/inscription', [App\Http\Controllers\InscriptionController::class, 'index']);
 Route::post('/inscription', [App\Http\Controllers\InscriptionController::class, 'store']);
@@ -25,14 +25,14 @@ Route::post('/buy', function (\Illuminate\Http\Request $request) {
 });
 
 Route::get('/buy', function () {
-    return view('buy-amount');
+return view('buy-amount');
 }); 
 
-Route::get("/mercado-pago/callback", function () {
-    $paymentUrl = "/123";
-    
-    Mail::to("test@test.com")
-    ->send(new VerifyAssistanceMail($paymentUrl));
+Route::get("/mercado-pago/callback", function (\Illuminate\Http\Request $request) {
+    Log::info('Callback de Mercado Pago', $request->query());
 
-
+    return view('mercado-pago.callback');
 })->name("inscription.mercado-pago.callback");
+
+Route::post("/webhooks/mercado-pago/successfull-payment", MercadoPagoWebhookController::class)
+    ->name("webhooks.mercado-pago.successful-payment");
