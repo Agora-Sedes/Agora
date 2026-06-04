@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ConferenceController;
 use App\Http\Middleware\AdminAuth;
 use App\Mail\VerifyAssistanceMail;
 use Illuminate\Support\Facades\Mail;
@@ -29,7 +31,10 @@ Route::post('/buy', function (\Illuminate\Http\Request $request) {
 
 Route::get('/buy', function () {
     return view('buy-amount');
-}); 
+});
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
 
 Route::get("/mercado-pago/callback", function () {
     $paymentUrl = "/123";
