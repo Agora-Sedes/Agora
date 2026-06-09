@@ -8,8 +8,8 @@ class ConferenceController extends Controller
 {
     public function list()
     {
-        $conferences = Conference::all();
-        return view('home', [
+        $conferences = Conference::all()->sortByDesc('starts_at');
+        return view('conferences.list', [
             'conferences' => $conferences,
         ]);
     }
@@ -24,7 +24,7 @@ class ConferenceController extends Controller
 
         $talks = $conference->talks->sortBy('starts_at');
 
-        return view('show', [
+        return view('conferences.show', [
             'conference' => $conference,
             'talks' => $talks,
         ]);

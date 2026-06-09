@@ -8,7 +8,7 @@
 @endsection
 
 @section('header_action')
-    <a id="btn-intranet" href="/admin/login" class="header-action">
+    <a id="btn-intranet" href="{{ route('intranet.login') }}" class="header-action">
         Intranet
     </a>
 @endsection

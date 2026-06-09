@@ -8,7 +8,7 @@
 @endsection
 
 @section('header_action')
-    <a id="btn-volver" href="{{ route('home') }}" class="header-action">
+    <a id="btn-volver" href="{{ route('conferences.list') }}" class="header-action">
         ← Volver
     </a>
 @endsection

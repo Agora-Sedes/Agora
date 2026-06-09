@@ -14,7 +14,7 @@
 
     <header class="site-header">
         <div class="container site-header__inner">
-            <a href="{{ route('home') }}" class="brand" aria-label="Inicio">
+            <a href="{{ route('conferences.list') }}" class="brand" aria-label="Inicio">
                 <span class="brand__mark">Á</span>
                 <span class="brand__text">
                     <span class="brand__name">Ágora</span>
