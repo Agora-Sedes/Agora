@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $conference['name'])
+@section('title', $conference['title'])
 @section('meta_description', $conference['description'])
 
 @section('css')
@@ -14,29 +14,31 @@
 @endsection
 
 @section('content')
-
     <section class="hero">
         <div class="container section">
             <div class="hero__inner">
-                <div class="meta-row">
-                    <span>
-                        {{
-                            \Carbon\Carbon::parse($conference['date'])
-                                ->locale('es')
-                                ->isoFormat('dddd D [de] MMMM [de] YYYY')
-                        }}
-                    </span>
-                    <span>{{ $conference['place'] }}</span>
-                </div>
+                <span class="meta-row">
+                    {{
+                        \Carbon\Carbon::parse($conference['starts_at'])
+                            ->locale('es')
+                            ->isoFormat('D [de] MMMM [de] YYYY')
+                    }}
+                    -
+                    {{
+                        \Carbon\Carbon::parse($conference['ends_at'])
+                            ->locale('es')
+                            ->isoFormat('D [de] MMMM [de] YYYY')
+                    }}
+                </span>
 
-                <h1>{{ $conference['name'] }}</h1>
+                <h1>{{ $conference['title'] }}</h1>
 
                 @if (!empty($conference['description']))
                     <p class="hero__lead">{{ $conference['description'] }}</p>
                 @endif
 
                 <p class="badge">
-                    {{ count($conference['talks']) }} {{ count($conference['talks']) === 1 ? 'charla' : 'charlas' }} en el programa
+                    {{ $talks->count() }} {{ $talks->count() === 1 ? 'charla' : 'charlas' }} en el itinerario
                 </p>
             </div>
         </div>
@@ -46,12 +48,12 @@
 
         <h2 class="page-title">Itinerario</h2>
 
-        @if (empty($conference['talks']))
+        @if ($talks->isEmpty())
             <p class="muted">Próximamente se publicará el programa de charlas.</p>
         @else
-            <div id="acordeon-talks" class="accordion">
+            <div class="accordion">
 
-                @foreach ($conference['talks'] as $index => $talk)
+                @foreach ($talks as $index => $talk)
                     <div class="talk-item" id="talk-{{ $talk['id'] }}">
 
                         <button
@@ -66,33 +68,36 @@
                             <span class="talk-item__titles">
                                 <span class="talk-item__title">{{ $talk['title'] }}</span>
                                 <span class="talk-item__sub">
-                                    @if (!empty($talk['hour_begin']))
-                                        {{ $talk['hour_begin'] }}{{ !empty($talk['hour_end']) ? ' – ' . $talk['hour_end'] : '' }}
-                                        @if (!empty($talk['talker'])) · @endif
-                                    @endif
-                                    @if (!empty($talk['talker']))
-                                        {{ $talk['talker'] }}
-                                    @endif
+                                    {{
+                                        \Carbon\Carbon::parse($talk['starts_at'])
+                                            ->locale('es')
+                                            ->isoFormat('D [de] MMMM [de] YYYY')
+                                    }}
+                                    -
+                                    {{
+                                        \Carbon\Carbon::parse($talk['ends_at'])
+                                            ->locale('es')
+                                            ->isoFormat('D [de] MMMM [de] YYYY')
+                                    }}
+                                    ·
+                                    {{ $talk['speaker'] }}
                                 </span>
                             </span>
                         </button>
 
                         <div id="talk-body-{{ $talk['id'] }}" class="talk-item__body" role="region">
-                            @if (!empty($talk['abstract']))
-                                <p>{{ $talk['abstract'] }}</p>
+                            @if (!empty($talk['description']))
+                                <p>{{ $talk['description'] }}</p>
                             @else
-                                <p>Abstract no disponible.</p>
+                                <p>Descripción no disponible.</p>
                             @endif
 
                             <div class="meta-row">
-                                @if (!empty($talk['talker']))
-                                    <span>{{ $talk['talker'] }}</span>
-                                @endif
-                                @if (!empty($talk['hour_begin']))
-                                    <span>
-                                        {{ $talk['hour_begin'] }}{{ !empty($talk['hour_end']) ? ' – ' . $talk['hour_end'] : '' }}
-                                    </span>
-                                @endif
+                                <p class="talk-speaker"> {{ $talk['speaker'] }} </p>
+                                -
+                                <p class="talk-speaker-background">
+                                    {{ $talk['speaker_background'] }}
+                                </p>
                             </div>
                         </div>
 
@@ -108,7 +113,9 @@
         <div class="panel cta">
             <h3>¿Querés participar?</h3>
             <p>
-                Asegurá tu lugar en la jornada. La inscripción es gratuita y está sujeta a disponibilidad de cupos.
+                Asegurá tu lugar en la jornada.
+                <br>
+                La inscripción es paga y está sujeta a disponibilidad de cupos.
             </p>
             <a
                 id="btn-inscription-{{ $conference['id'] }}"
@@ -119,7 +126,6 @@
             </a>
         </div>
     </section>
-
 @endsection
 
 @push('scripts')
