@@ -32,11 +32,6 @@ echo "
 npm install --ignore-scripts || exit 1
 
 echo "
---- Building initial bundle ---
-"
-npm run build || exit 1
-
-echo "
 --- Generating development .env configuration ---
 "
 
@@ -44,8 +39,8 @@ cp .env.example .env
 php artisan key:generate --ansi
 
 echo "
- +---------------------------------------------+
- | Done! Reverse this process with:            |
- |   rm -r node_modules/ public/build/ vendor/ |
- +---------------------------------------------+
+ +-------------------------------------+
+ | Done! Reverse this process with:    |
+ |   rm -r node_modules/ vendor/       |
+ +-------------------------------------+
 "
