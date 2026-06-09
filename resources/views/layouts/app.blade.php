@@ -31,8 +31,8 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>© {{ date('Y') }} Sedes Sapientiae · Todos los derechos reservados</p>
-            <p class="text-xs">Ágora – Sistema de jornadas académicas</p>
+            <p>Copyright {{ date('Y') }}, equipo de desarrollo de <a href="https://github.com/Agora-Sedes/Agora">Ágora</a></p>
+            <p class="text-xs">Instituto de Profesorado Sedes Sapientiae</p>
         </div>
     </footer>
 

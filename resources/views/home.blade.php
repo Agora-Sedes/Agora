@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Jornadas')
-@section('meta_description', 'Próximas jornadas académicas de Sedes Sapientiae. Inscribite y participá de charlas, paneles y talleres.')
+@section('meta_description', 'Próximas jornadas del Instituto de Profesorado Sedes Sapientiae.')
 
 @section('css')
     <link rel="stylesheet" href="{{ url('css/home.css') }}">
@@ -22,7 +22,7 @@
                     <span></span>
                     Próximas jornadas
                 </p>
-                <h1>Jornadas Académicas</h1>
+                <h1>Jornadas de Innovación y Práctica Docente</h1>
                 <p class="hero__lead">
                     Espacios de encuentro, debate y aprendizaje organizados por el Instituto de Profesorado Sedes Sapientiae.
                 </p>
@@ -35,7 +35,7 @@
         @if ($conferences->isEmpty())
             <div class="empty-state">
                 <h2>No hay jornadas programadas</h2>
-                <p>Volvé pronto, pronto habrá novedades.</p>
+                <p>Volvé pronto para ver las novedades.</p>
             </div>
         @else
             <div class="conf-grid">
