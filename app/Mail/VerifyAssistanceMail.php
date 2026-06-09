@@ -21,7 +21,7 @@ class VerifyAssistanceMail extends Mailable
         public readonly string $token
     ) {
         $this->verificationUrl =
-            env('AGORA_URL') . "/verify-attendance/{$this->token}";
+            env('APP_URL') . "/verify-attendance/{$this->token}";
 
         $this->qrCode = base64_encode(
             QrCode::format('png')
