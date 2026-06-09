@@ -7,7 +7,7 @@ RUN apk add --no-cache \
       php84-mbstring php84-xml php84-curl php84-fileinfo \
       php84-bcmath php84-tokenizer php84-session php84-ctype \
       php84-dom php84-xmlwriter php84-simplexml php84-pcntl \
-      php84-intl php84-pecl-imagick;
+      php84-intl php84-pecl-imagick php84-gd;
 
 RUN echo "extension=imagick" > /etc/php84/conf.d/imagick.ini
 
