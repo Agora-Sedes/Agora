@@ -9,8 +9,8 @@
 @section('content')
 <div class="container section">
     <div class="panel" style="max-width: 640px; margin-inline: auto;">
-        <p class="eyebrow"><span></span> Confirmación</p>
-        <h1 class="page-title" style="margin-top: 12px;">Inscripción recibida</h1>
+        <p class="eyebrow"><span></span> Confirmación de inscripción</p>
+        <h1 class="page-title" style="margin-top: 12px;">Inscripción completada con éxito</h1>
         <p class="muted">Se registraron {{ count($participants) }} participante(s):</p>
 
         <div class="stack" style="margin-top: 24px;">
@@ -28,7 +28,7 @@
             @endforeach
         </div>
 
-        <a href="{{ route('home') }}" class="btn btn--ghost" style="margin-top: 24px;">Volver al inicio</a>
+        <a href="{{ route('conferences.list') }}" class="btn btn--ghost" style="margin-top: 24px;">Volver al inicio</a>
     </div>
 </div>
 @endsection

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttendantRegistrationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -12,8 +13,16 @@ use App\Http\Middleware\IntranetAuth;
 
 Route::pattern('id', '[0-9]+');
 
+//// Normal user flow
+
 Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list');
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
+
+Route::controller(AttendantRegistrationController::class)->group(function () {
+    Route::get('/conferences/{id}/register-1', 'register1')->name('conferences.register-1');
+    Route::post('/conferences/{id}/register-2', 'register2')->name('conferences.register-2');
+    Route::post('/conferences/{id}/register-3', 'register3')->name('conferences.register-3');
+});
 
 //// Intranet
 
@@ -37,19 +46,6 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::view('/intranet/conferences/{id}/attendants/new', 'new')->name('intranet.conferences.attendants.new');
         Route::post('/intranet/conferences/{id}/attendants/new', 'store');
     });
-});
-
-Route::get('/inscription', [App\Http\Controllers\InscriptionController::class, 'index']);
-Route::post('/inscription', [App\Http\Controllers\InscriptionController::class, 'store']);
-
-Route::post('/buy', function (\Illuminate\Http\Request $request) {
-    $quantity = $request->input('entry', 1);
-    $method = $request->input('payment_method', 'value');
-    return redirect('/inscription?quantity=' . $quantity . '&method=' . $method);
-});
-
-Route::get('/buy', function () {
-    return view('buy-amount');
 });
 
 Route::get("/mercado-pago/callback", function (\Illuminate\Http\Request $request) {

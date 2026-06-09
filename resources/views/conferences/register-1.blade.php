@@ -7,11 +7,11 @@
     <div class="panel">
         <h1 class="page-title">¿Cuántas entradas?</h1>
 
-        <form action="/buy" method="post" class="stack">
+        <form action="{{ route('conferences.register-2', [ 'id' => $conference_id ]) }}" method="POST" class="stack">
             @csrf
             <div class="field">
                 <label for="entry">Cantidad</label>
-                <select name="entry" id="entry" class="select">
+                <select name="amount" id="entry" class="select">
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>

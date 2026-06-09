@@ -8,15 +8,29 @@ use Illuminate\Support\Facades\Mail;
 use MercadoPago\Client\Preference\PreferenceClient;
 use MercadoPago\MercadoPagoConfig;
 
-class InscriptionController extends Controller
+class AttendantRegistrationController extends Controller
 {
-    public function index(\Illuminate\Http\Request $request)
+    public function register1(int $id)
     {
-        $quantity = (int)$request->query('quantity', 1);
-        $method = $request->query('method', 'card');
-        return view('forminscription', ['quantity' => $quantity, 'method' => $method]);
+        return view('conferences.register-1', [
+            'conference_id' => $id,
+        ]);
     }
-     public function store(Request $request)
+
+    public function register2(int $id, Request $request)
+    {
+        $amount = intval($request->post('amount', 1), 10);
+        /** @var 'cash'|'mp' $method */
+        $method = $request->post('payment_method', 'cash');
+
+        return view('conferences.register-2', [
+            'amount' => $amount,
+            'method' => $method,
+            'conference_id' => $id,
+        ]);
+    }
+
+    public function register3(int $id, Request $request)
     {
         $data = $request->validate([
             'participants' => 'required|array',
@@ -25,21 +39,23 @@ class InscriptionController extends Controller
             'participants.*.dni' => 'required|string|max:255',
             'participants.*.email' => 'required|email|max:255',
             'participants.*.phone' => 'required|string|max:50',
-            'participants.*.mode' => 'required|in:presencial,virtual',
+            'participants.*.mode' => 'required|in:irl,online',
             'payment_method' => 'required|in:cash,mp',
         ]);
 
         if ($data['payment_method'] === 'mp') {
             $initPoint = $this->createMercadoPagoPreference($data['participants']);
             return redirect()->away($initPoint);
-        }
+        } // ^ early return
 
         foreach ($data['participants'] as $participant) {
             $inscriptionId = md5($participant['dni']);
             Mail::to($participant['email'])->send(new VerifyPaymentMail($inscriptionId));
         }
 
-        return view('inscription-confirmation', ['participants' => $data['participants']]);
+        return view('conferences.register-success', [
+            'participants' => $data['participants'],
+        ]);
     }
 
     private function createMercadoPagoPreference(array $participants): string
@@ -49,12 +65,12 @@ class InscriptionController extends Controller
         $buyer = $participants[0];
 
         $client = new PreferenceClient();
-        //@TODO: update hardcoded price and item name once DB pr is merged
+        // TODO: update hardcoded price and item name once DB pr is merged
         $preference = $client->create([
             'items' => [
                 [
                     'title' => 'Entrada a la jornada',
-                    'quantity' => count($participants), 
+                    'quantity' => count($participants),
                     'unit_price' => 12000,
                     'currency_id' => 'ARS',
                 ],
