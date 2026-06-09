@@ -3,7 +3,7 @@
 @section('title', 'Agregar inscripto')
 
 @section('header_action')
-    <a href="{{ route('dashboard') }}" class="header-action">← Panel</a>
+    <a href="{{ route('intranet.conferences.dashboard', [ 'id' => 1 ]) }}" class="header-action">← Panel</a>
 @endsection
 
 @section('content')

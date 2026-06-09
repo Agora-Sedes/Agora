@@ -10,7 +10,7 @@
 
     <div class="link-stack" style="max-width: 560px;">
         @foreach ($conferences as $conference)
-            <a href="{{ route('dashboard', ['name' => $conference['name']]) }}">{{ $conference['name'] }}</a>
+            <a href="{{ route('intranet.conferences.dashboard', ['id' => 1]) }}">{{ $conference['name'] }}</a>
         @endforeach
     </div>
 </div>
