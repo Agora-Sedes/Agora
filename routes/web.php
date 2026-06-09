@@ -4,9 +4,9 @@ use App\Http\Controllers\AttendantRegistrationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
-use App\Http\Controllers\MercadoPagoWebhookController;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\ConferenceController;
+use App\Http\Controllers\ExternalMercadoPagoController;
 use App\Http\Controllers\IntranetConferenceAttendantController;
 use App\Http\Controllers\IntranetConferenceController;
 use App\Http\Middleware\IntranetAuth;
@@ -48,11 +48,7 @@ Route::middleware(IntranetAuth::class)->group(function () {
     });
 });
 
-Route::get("/mercado-pago/callback", function (\Illuminate\Http\Request $request) {
-    Log::info('Callback de Mercado Pago', $request->query());
-
-    return view('mercado-pago.callback');
-})->name("inscription.mercado-pago.callback");
-
-Route::post("/webhooks/mercado-pago/successfull-payment", MercadoPagoWebhookController::class)
-    ->name("webhooks.mercado-pago.successful-payment");
+Route::controller(ExternalMercadoPagoController::class)->group(function () {
+   Route::get('/external/mercado-pago/callback', 'callback')->name('external.mercado-pago.callback');
+   Route::post('/external/webhooks/mercado-pago/successful-payment', 'successfulPaymentWebhook')->name("external.webhooks.mercado-pago.successful-payment");
+});

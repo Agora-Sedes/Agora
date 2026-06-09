@@ -9,14 +9,20 @@ use Illuminate\Support\Facades\Mail;
 use MercadoPago\Client\Payment\PaymentClient;
 use MercadoPago\MercadoPagoConfig;
 
-class MercadoPagoWebhookController extends Controller
+class ExternalMercadoPagoController extends Controller
 {
+    public function callback(Request $request)
+    {
+        Log::info('Callback de Mercado Pago', $request->query());
+
+        return view('external.mercado-pago.callback');
+    }
     /**
      * Notificación server-to-server de Mercado Pago cuando cambia el estado de un pago.
      * El webhook solo trae el ID; consultamos el detalle en la API y, si el pago fue
      * aprobado, mandamos el mail de asistencia al comprador.
      */
-    public function __invoke(Request $request)
+    public function successfulPaymentWebhook(Request $request)
     {
         Log::info('[MP webhook] >>> ENTRÓ al controller', [
             'method'  => $request->method(),
