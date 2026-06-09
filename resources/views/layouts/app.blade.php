@@ -6,21 +6,20 @@
     <title>@yield('title', 'Ágora') – Sedes Sapientiae</title>
     <meta name="description" content="@yield('meta_description', 'Jornadas académicas de la Facultad Sedes Sapientiae')">
 
+    <link rel="stylesheet" href="{{ url("css/app.css") }}">
+
+    @yield('css')
 </head>
 <body>
 
-    <header>
-        <div>
-
-            <a href="{{ route('home') }}" aria-label="Inicio">
-                
-                <div>
-                </div>
-                
-                <div class="leading-tight">
-                    <span>Ágora</span>
-                    <span>Sedes Sapientiae</span>
-                </div>
+    <header class="site-header">
+        <div class="container site-header__inner">
+            <a href="{{ route('home') }}" class="brand" aria-label="Inicio">
+                <span class="brand__mark">Á</span>
+                <span class="brand__text">
+                    <span class="brand__name">Ágora</span>
+                    <span class="brand__sub">Sedes Sapientiae</span>
+                </span>
             </a>
             @yield('header_action')
         </div>
@@ -30,8 +29,8 @@
         @yield('content')
     </main>
 
-    <footer>
-        <div>
+    <footer class="site-footer">
+        <div class="container">
             <p>© {{ date('Y') }} Sedes Sapientiae · Todos los derechos reservados</p>
             <p class="text-xs">Ágora – Sistema de jornadas académicas</p>
         </div>

@@ -1,0 +1,15 @@
+/* Estilos específicos de la confirmación de inscripción: lista clave/valor.
+   Las variables vienen de app.css. */
+
+.confirmation-list {
+  width: 100%;
+  border-collapse: collapse;
+}
+.confirmation-list td {
+  padding: 6px 0;
+  vertical-align: top;
+}
+.confirmation-list td:first-child {
+  width: 110px;
+  font-size: 0.9rem;
+}
