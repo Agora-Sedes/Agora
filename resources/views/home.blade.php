@@ -24,7 +24,7 @@
                 </p>
                 <h1>Jornadas Académicas</h1>
                 <p class="hero__lead">
-                    Espacios de encuentro, debate y aprendizaje organizados por la Facultad Sedes Sapientiae.
+                    Espacios de encuentro, debate y aprendizaje organizados por el Instituto de Profesorado Sedes Sapientiae.
                 </p>
             </div>
         </div>
@@ -44,26 +44,24 @@
                         id="conference-{{ $conference['id'] }}"
                         href="{{ route('conferences.show', $conference['id']) }}"
                         class="conf-card"
-                        aria-label="ver detalle: {{ $conference['name'] }}"
                     >
-                        <div class="meta-row">
-                            <span>
-                                {{
-                                    \Carbon\Carbon::parse($conference['date'])
-                                        ->locale('es')
-                                        ->isoFormat('D [de] MMMM [de] YYYY')
-                                }}
-                            </span>
-                            <span>{{ $conference['place'] }}</span>
-                        </div>
+                        <span class="meta-row">
+                            {{
+                                \Carbon\Carbon::parse($conference['starts_at'])
+                                    ->locale('es')
+                                    ->isoFormat('D [de] MMMM [de] YYYY')
+                            }}
+                            -
+                            {{
+                                \Carbon\Carbon::parse($conference['ends_at'])
+                                    ->locale('es')
+                                    ->isoFormat('D [de] MMMM [de] YYYY')
+                            }}
+                        </span>
 
-                        <h2>{{ $conference['name'] }}</h2>
+                        <h2>{{ $conference['title'] }}</h2>
 
                         <p class="conf-card__desc">{{ $conference['description'] }}</p>
-
-                        <p class="conf-card__count">
-                            {{ $conference['talk_count'] }} {{ $conference['talk_count'] === 1 ? 'charla' : 'charlas' }}
-                        </p>
                     </a>
                 @endforeach
             </div>

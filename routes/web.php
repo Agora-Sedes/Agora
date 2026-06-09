@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ConferenceController;
 use App\Http\Middleware\AdminAuth;
-use Illuminate\Http\Request;
-use App\Mail\VerifyAssistanceMail;
-use Illuminate\Support\Facades\Mail;
+
+Route::get('/', [ConferenceController::class, 'list'])->name('home');
+Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
 
 Route::get('/inscription', [App\Http\Controllers\InscriptionController::class, 'index']);
 Route::post('/inscription', [App\Http\Controllers\InscriptionController::class, 'store']);
@@ -35,7 +35,7 @@ Route::post('/buy', function (\Illuminate\Http\Request $request) {
 
 Route::get('/buy', function () {
     return view('buy-amount');
-}); 
+});
 
 Route::get("/mercado-pago/callback", function (\Illuminate\Http\Request $request) {
     Log::info('Callback de Mercado Pago', $request->query());
@@ -46,5 +46,3 @@ Route::get("/mercado-pago/callback", function (\Illuminate\Http\Request $request
 Route::post("/webhooks/mercado-pago/successfull-payment", MercadoPagoWebhookController::class)
     ->name("webhooks.mercado-pago.successful-payment");
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');

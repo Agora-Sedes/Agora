@@ -2,10 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Conference;
 use Illuminate\Http\Request;
 
 class ConferenceController extends Controller
 {
+    public function list() {
+        $conferences = Conference::all();
+        return view('home', [
+            'conferences' => $conferences,
+        ]);
+    }
     public function show(int $id)
     {
       // Datos hardcodeados de prueba a reemplazar mas proximo a la fecha del evento futuro
