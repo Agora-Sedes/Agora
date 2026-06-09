@@ -5,27 +5,42 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ConferenceController;
-use App\Http\Middleware\AdminAuth;
+use App\Http\Controllers\IntranetConferenceAttendantController;
+use App\Http\Controllers\IntranetConferenceController;
+use App\Http\Middleware\IntranetAuth;
 
-Route::get('/', [ConferenceController::class, 'list'])->name('home');
+Route::pattern('id', '[0-9]+');
+
+Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list');
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
+
+//// Intranet
+
+/// Auth
+Route::view('/intranet/login', 'intranet.login')->name('intranet.login');
+Route::post('/intranet/login', LoginController::class);
+Route::post('/intranet/logout', LogoutController::class)->name('intranet.logout');
+
+/// Administrator actions (requires login)
+Route::middleware(IntranetAuth::class)->group(function () {
+    Route::controller(IntranetConferenceController::class)->group(function () {
+        /// General
+        Route::get('/intranet/conferences/list', 'list')->name('intranet.conferences.list');
+        Route::get('/intranet/conferences/{id}/dashboard', 'dashboard')->name('intranet.conferences.dashboard');
+        Route::get('/intranet/conferences/{id}/qr-scan', 'qrScan')->name('intranet.conferences.qr-scan');
+    });
+
+    Route::controller(IntranetConferenceAttendantController::class)->group(function () {
+        /// Conference attendant management
+        Route::view('/intranet/conferences/{id}/attendants/list', 'list')->name('intranet.conferences.attendants.list');
+        Route::view('/intranet/conferences/{id}/attendants/new', 'new')->name('intranet.conferences.attendants.new');
+        Route::post('/intranet/conferences/{id}/attendants/new', 'store');
+    });
+});
 
 Route::get('/inscription', [App\Http\Controllers\InscriptionController::class, 'index']);
 Route::post('/inscription', [App\Http\Controllers\InscriptionController::class, 'store']);
-
-Route::view('/login', 'adminlogin')->name('login');
-Route::post('/login', LoginController::class);
-Route::post('/logout', LogoutController::class)->name('logout');
-
-Route::middleware(AdminAuth::class)->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::view('/addattendant', 'admin.addattendant')->name('addattendant');
-    Route::view('/attendants', 'admin.attendants')->name('attendants');
-    Route::view('/qrscan', 'admin.qrscan')->name('qrscan');
-});
-
 
 Route::post('/buy', function (\Illuminate\Http\Request $request) {
     $quantity = $request->input('entry', 1);
@@ -45,4 +60,3 @@ Route::get("/mercado-pago/callback", function (\Illuminate\Http\Request $request
 
 Route::post("/webhooks/mercado-pago/successfull-payment", MercadoPagoWebhookController::class)
     ->name("webhooks.mercado-pago.successful-payment");
-
