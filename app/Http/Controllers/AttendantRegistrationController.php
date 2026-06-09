@@ -84,9 +84,9 @@ class AttendantRegistrationController extends Controller
                 ],
             ],
             'back_urls' => [
-                'success' => env('APP_URL') . '/mercado-pago/callback',
-                'failure' => env('APP_URL') . '/mercado-pago/callback',
-                'pending' => env('APP_URL') . '/mercado-pago/callback',
+                'success' => route('external.mercado-pago.callback'),
+                'failure' => route('external.mercado-pago.callback'),
+                'pending' => route('external.mercado-pago.callback'),
             ],
             'notification_url' => config('services.mercadopago.notification_url'),
             // Texto que ve el comprador en el resumen de su tarjeta (usa APP_NAME=Agora)
