@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // El webhook de MP es server-to-server y no envía token CSRF
         $middleware->preventRequestForgery(except: [
-            'external/webhooks/mercado-pago/*',
+            'webhooks/mercado-pago/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

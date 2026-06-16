@@ -10,27 +10,27 @@ use MercadoPago\MercadoPagoConfig;
 
 class AttendantRegistrationController extends Controller
 {
-    public function register1(int $id)
+    public function amountAndPaymentMethodForm(int $id)
     {
-        return view('conferences.register-1', [
+        return view('conferences.register.amount-and-payment-method', [
             'conference_id' => $id,
         ]);
     }
 
-    public function register2(int $id, Request $request)
+    public function participantsForm(int $id, Request $request)
     {
         $amount = intval($request->post('amount', 1), 10);
         /** @var 'cash'|'mp' $method */
         $method = $request->post('payment_method', 'cash');
 
-        return view('conferences.register-2', [
+        return view('conferences.register.participants', [
             'amount' => $amount,
             'method' => $method,
             'conference_id' => $id,
         ]);
     }
 
-    public function register3(int $id, Request $request)
+    public function completeRegistration(int $id, Request $request)
     {
         $data = $request->validate([
             'participants' => 'required|array',
@@ -53,7 +53,7 @@ class AttendantRegistrationController extends Controller
             Mail::to($participant['email'])->send(new VerifyPaymentMail($inscriptionId));
         }
 
-        return view('conferences.register-success', [
+        return view('conferences.register.success', [
             'participants' => $data['participants'],
         ]);
     }

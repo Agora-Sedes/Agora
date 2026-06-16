@@ -119,7 +119,7 @@
             </p>
             <a
                 id="btn-inscription-{{ $conference['id'] }}"
-                href="{{ route('conferences.register-1', [ 'id' => $conference['id'] ]) }}"
+                href="{{ route('conferences.register.step-1', [ 'id' => $conference['id'] ]) }}"
                 class="btn btn--primary"
             >
                 Inscribirme

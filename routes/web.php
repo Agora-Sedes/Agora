@@ -19,9 +19,9 @@ Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list')
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
 
 Route::controller(AttendantRegistrationController::class)->group(function () {
-    Route::get('/conferences/{id}/register-1', 'register1')->name('conferences.register-1');
-    Route::post('/conferences/{id}/register-2', 'register2')->name('conferences.register-2');
-    Route::post('/conferences/{id}/register-3', 'register3')->name('conferences.register-3');
+    Route::get('/conferences/{id}/register/step-1', 'amountAndPaymentMethodForm')->name('conferences.register.step-1');
+    Route::post('/conferences/{id}/register/step-2', 'participantsForm')->name('conferences.register.step-2');
+    Route::post('/conferences/{id}/register/success', 'completeRegistration')->name('conferences.register.step-3');
 });
 
 //// Intranet
