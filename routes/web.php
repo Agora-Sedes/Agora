@@ -49,6 +49,6 @@ Route::middleware(IntranetAuth::class)->group(function () {
 });
 
 Route::controller(ExternalMercadoPagoController::class)->group(function () {
-   Route::get('/external/mercado-pago/callback', 'callback')->name('external.mercado-pago.callback');
-   Route::post('/external/webhooks/mercado-pago/successful-payment', 'successfulPaymentWebhook')->name("external.webhooks.mercado-pago.successful-payment");
+    Route::get('/external/mercado-pago/callback', 'callback')->name('external.mercado-pago.callback');
+    Route::post('/webhooks/mercado-pago/successful-payment', 'successfulPaymentWebhook')->name("webhooks.mercado-pago.successful-payment");
 });
