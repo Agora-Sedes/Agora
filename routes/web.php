@@ -1,50 +1,54 @@
 <?php
 
+use App\Http\Controllers\AttendantRegistrationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
-use App\Http\Controllers\MercadoPagoWebhookController;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ConferenceController;
-use App\Http\Middleware\AdminAuth;
-use Illuminate\Http\Request;
-use App\Mail\VerifyAssistanceMail;
-use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\ExternalMercadoPagoController;
+use App\Http\Controllers\IntranetConferenceAttendantController;
+use App\Http\Controllers\IntranetConferenceController;
+use App\Http\Middleware\IntranetAuth;
 
-Route::get('/inscription', [App\Http\Controllers\InscriptionController::class, 'index']);
-Route::post('/inscription', [App\Http\Controllers\InscriptionController::class, 'store']);
+Route::pattern('id', '[0-9]+');
 
-Route::view('/login', 'adminlogin')->name('login');
-Route::post('/login', LoginController::class);
-Route::post('/logout', LogoutController::class)->name('logout');
+//// Normal user flow
 
-Route::middleware(AdminAuth::class)->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::view('/addattendant', 'admin.addattendant')->name('addattendant');
-    Route::view('/attendants', 'admin.attendants')->name('attendants');
-    Route::view('/qrscan', 'admin.qrscan')->name('qrscan');
-});
-
-
-Route::post('/buy', function (\Illuminate\Http\Request $request) {
-    $quantity = $request->input('entry', 1);
-    $method = $request->input('payment_method', 'value');
-    return redirect('/inscription?quantity=' . $quantity . '&method=' . $method);
-});
-
-Route::get('/buy', function () {
-    return view('buy-amount');
-}); 
-
-Route::get("/mercado-pago/callback", function (\Illuminate\Http\Request $request) {
-    Log::info('Callback de Mercado Pago', $request->query());
-
-    return view('mercado-pago.callback');
-})->name("inscription.mercado-pago.callback");
-
-Route::post("/webhooks/mercado-pago/successfull-payment", MercadoPagoWebhookController::class)
-    ->name("webhooks.mercado-pago.successful-payment");
-
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list');
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
+
+Route::controller(AttendantRegistrationController::class)->group(function () {
+    Route::get('/conferences/{id}/register/step-1', 'amountAndPaymentMethodForm')->name('conferences.register.step-1');
+    Route::post('/conferences/{id}/register/step-2', 'participantsForm')->name('conferences.register.step-2');
+    Route::post('/conferences/{id}/register/success', 'completeRegistration')->name('conferences.register.step-3');
+});
+
+//// Intranet
+
+/// Auth
+Route::view('/intranet/login', 'intranet.login')->name('intranet.login');
+Route::post('/intranet/login', LoginController::class);
+Route::post('/intranet/logout', LogoutController::class)->name('intranet.logout');
+
+/// Administrator actions (requires login)
+Route::middleware(IntranetAuth::class)->group(function () {
+    Route::controller(IntranetConferenceController::class)->group(function () {
+        /// General
+        Route::get('/intranet/conferences/list', 'list')->name('intranet.conferences.list');
+        Route::get('/intranet/conferences/{id}/dashboard', 'dashboard')->name('intranet.conferences.dashboard');
+        Route::get('/intranet/conferences/{id}/qr-scan', 'qrScan')->name('intranet.conferences.qr-scan');
+    });
+
+    Route::controller(IntranetConferenceAttendantController::class)->group(function () {
+        /// Conference attendant management
+        Route::view('/intranet/conferences/{id}/attendants/list', 'list')->name('intranet.conferences.attendants.list');
+        Route::view('/intranet/conferences/{id}/attendants/new', 'new')->name('intranet.conferences.attendants.new');
+        Route::post('/intranet/conferences/{id}/attendants/new', 'store');
+    });
+});
+
+Route::controller(ExternalMercadoPagoController::class)->group(function () {
+    Route::get('/external/mercado-pago/callback', 'callback')->name('external.mercado-pago.callback');
+    Route::post('/webhooks/mercado-pago/successful-payment', 'successfulPaymentWebhook')->name("webhooks.mercado-pago.successful-payment");
+});

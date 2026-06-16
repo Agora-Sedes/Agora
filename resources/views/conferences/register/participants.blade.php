@@ -10,11 +10,11 @@
 <div class="content container section">
     <div class="form-container panel">
         <h1 class="page-title">Formulario de Inscripción</h1>
-        <form action="/inscription" method="POST">
+        <form action="{{ route('conferences.register.step-3', [ 'id' => $conference_id ]) }}" method="POST">
             @csrf
 
             <input type="hidden" name="payment_method" value="{{ $method }}">
-            @for ($i = 0; $i < $quantity; $i++)
+            @for ($i = 0; $i < $amount; $i++)
                 <fieldset>
                 <legend>Persona {{ $i + 1 }}</legend>
 
@@ -42,19 +42,19 @@
                     <label>Modalidad</label>
                     <div class="form__radio-group">
                         <label class="form__radio">
-                            <input type="radio" id="presencial_{{ $i }}" name="participants[{{ $i }}][mode]" value="presencial" required>
+                            <input type="radio" id="irl_{{ $i }}" name="participants[{{ $i }}][mode]" value="irl" required>
                             Presencial
                         </label>
                         <label class="form__radio">
-                            <input type="radio" id="virtual_{{ $i }}" name="participants[{{ $i }}][mode]" value="virtual" required>
+                            <input type="radio" id="online_{{ $i }}" name="participants[{{ $i }}][mode]" value="online" required>
                             Virtual
                         </label>
                     </div>
                 </div>
                 </fieldset>
-                @endfor
+            @endfor
 
-                <button class="btn btn--primary btn--block" type="submit">Inscribirse</button>
+            <button class="btn btn--primary btn--block" type="submit">Inscribirse</button>
         </form>
     </div>
 </div>

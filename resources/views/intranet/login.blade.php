@@ -8,7 +8,7 @@
         <p class="eyebrow"><span></span> Intranet</p>
         <h2 class="page-title" style="margin-top: 12px;">Acceso administrador</h2>
 
-        <form method="POST" action="/login" class="stack">
+        <form method="POST" action="{{ route('intranet.login') }}" class="stack">
             @csrf
             <div class="field">
                 <label for="token">Token de administrador</label>
