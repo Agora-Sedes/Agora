@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendant;
 use App\Mail\VerifyPaymentMail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use MercadoPago\Client\Preference\PreferenceClient;
 use MercadoPago\MercadoPagoConfig;
@@ -42,6 +44,23 @@ class AttendantRegistrationController extends Controller
             'participants.*.mode' => 'required|in:irl,online',
             'payment_method' => 'required|in:cash,mp',
         ]);
+
+        $conferenceId = $id;
+        $isDraft = $data['payment_method'] === 'mp';
+
+        DB::transaction(function () use ($conferenceId, $data, $isDraft) {
+            foreach ($data['participants'] as $participant) {
+                Attendant::create([
+                    'conference_id' => $conferenceId,
+                    'is_draft' => $isDraft,
+                    'was_present' => false,
+                    'government_id' => $participant['dni'],
+                    'full_name' => trim($participant['name'] . ' ' . $participant['lastname']),
+                    'email' => $participant['email'],
+                    'phone_number' => $participant['phone'],
+                ]);
+            }
+        });
 
         if ($data['payment_method'] === 'mp') {
             $initPoint = $this->createMercadoPagoPreference($data['participants']);
