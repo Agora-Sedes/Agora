@@ -31,23 +31,6 @@
         font-size: 1.5rem;
     }
 
-    .qr-camera {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        background: #0f172a;
-        border-radius: 20px;
-        overflow: hidden;
-        display: grid;
-        place-items: center;
-        position: relative;
-    }
-
-    .qr-camera video, .qr-camera canvas {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
     .qr-badge {
         display: inline-flex;
         align-items: center;
@@ -60,8 +43,15 @@
         margin-bottom: 16px;
     }
 
-    .qr-hidden {
-        display: none !important;
+    .qr-camera {
+        width: 100%;
+        min-height: 320px;
+        background: #0f172a;
+        border-radius: 20px;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        position: relative;
     }
 
     .qr-person {
@@ -83,6 +73,14 @@
         gap: 12px;
     }
 
+    .qr-hidden {
+        display: none !important;
+    }
+
+    .qr-status {
+        margin-top: 16px;
+    }
+
     @media (min-width: 860px) {
         .qr-flow {
             grid-template-columns: 1.05fr 0.95fr;
@@ -97,16 +95,14 @@
 
     <div class="qr-flow">
         <section class="qr-card qr-stage" id="scanStage">
-            <div class="qr-badge">Escanea el QR con la cámara del dispositivo</div>
+            <div class="qr-badge">Permiso de cámara y escaneo</div>
             <h3 class="qr-stage__title">Lector QR</h3>
-            <p id="scanHelp">Apuntá la cámara al código QR del asistente. Si el navegador no puede abrir la cámara, revisá los permisos del dispositivo.</p>
+            <p>El navegador pedirá permiso para usar la cámara. Apuntá al QR del asistente para buscarlo en la conferencia actual.</p>
 
-            <div class="qr-camera" id="cameraWrap">
-                <video id="cameraVideo" playsinline muted></video>
-                <canvas id="cameraCanvas" class="qr-hidden"></canvas>
-            </div>
+            <div class="qr-camera" id="qrReader"></div>
 
-            <p id="scanStatus" style="margin-top: 16px;">Esperando un código...</p>
+            <p class="qr-status" id="scanStatus">Esperando permiso de cámara...</p>
+
             <form id="manualScanForm" style="display: flex; gap: 12px; margin-top: 16px;">
                 <input id="manualCode" class="input" type="text" placeholder="Pegar código o URL del QR" style="flex: 1;">
                 <button class="btn btn--primary" type="submit">Buscar</button>
@@ -116,13 +112,25 @@
         <section class="qr-card qr-stage qr-hidden" id="verifyStage">
             <div class="qr-badge" style="background: #ecfeff; color: #0f766e;">Verificá los datos</div>
             <h3 class="qr-stage__title">Persona detectada</h3>
-            <p>Confirmá que la persona y los datos coinciden antes de registrar la asistencia.</p>
+            <p>Confirmá que la persona pertenece a esta conferencia antes de registrar la asistencia.</p>
 
             <div class="qr-person" id="attendantData"></div>
 
             <div class="qr-actions">
-                <button type="button" class="btn" id="cancelScanBtn">Cancelar</button>
-                <button type="button" class="btn btn--primary" id="confirmScanBtn">Correcto</button>
+                <button type="button" class="btn" id="cancelScanBtn">Cancelar inscripción</button>
+                <button type="button" class="btn btn--primary" id="confirmScanBtn">Datos correctos</button>
+            </div>
+        </section>
+
+        <section class="qr-card qr-stage qr-hidden" id="successStage">
+            <div class="qr-badge" style="background: #ecfdf3; color: #166534;">Persona aceptada</div>
+            <h3 class="qr-stage__title">Asistencia registrada</h3>
+            <p id="successMessage">La transacción en la base de datos se completó correctamente.</p>
+
+            <div class="qr-person" id="successData"></div>
+
+            <div class="qr-actions">
+                <button type="button" class="btn btn--primary" id="backToScanBtn">Volver a escanear</button>
             </div>
         </section>
     </div>
@@ -130,45 +138,27 @@
 @endsection
 
 @push('scripts')
+<script src="https://unpkg.com/html5-qrcode"></script>
 <script>
 (function () {
     const lookupUrl = @json(route('intranet.conferences.qr-scan.lookup', ['id' => $conferenceId]));
     const confirmUrl = @json(route('intranet.conferences.qr-scan.confirm', ['id' => $conferenceId]));
     const scanStage = document.getElementById('scanStage');
     const verifyStage = document.getElementById('verifyStage');
-    const video = document.getElementById('cameraVideo');
-    const canvas = document.getElementById('cameraCanvas');
-    const canvasContext = canvas.getContext('2d');
+    const successStage = document.getElementById('successStage');
     const scanStatus = document.getElementById('scanStatus');
     const attendantData = document.getElementById('attendantData');
+    const successData = document.getElementById('successData');
+    const successMessage = document.getElementById('successMessage');
     const confirmBtn = document.getElementById('confirmScanBtn');
     const cancelBtn = document.getElementById('cancelScanBtn');
+    const backToScanBtn = document.getElementById('backToScanBtn');
     const manualForm = document.getElementById('manualScanForm');
     const manualCode = document.getElementById('manualCode');
-    let stream = null;
+    const readerElement = document.getElementById('qrReader');
     let activeAttendant = null;
-    let scanning = false;
-    let detector = null;
-
-    function showScanStage() {
-        verifyStage.classList.add('qr-hidden');
-        scanStage.classList.remove('qr-hidden');
-        activeAttendant = null;
-        scanStatus.textContent = 'Esperando un código...';
-    }
-
-    function showVerifyStage(attendant) {
-        activeAttendant = attendant;
-        scanStage.classList.add('qr-hidden');
-        verifyStage.classList.remove('qr-hidden');
-        attendantData.innerHTML = `
-            <strong>${escapeHtml(attendant.full_name)}</strong>
-            <span>DNI: ${escapeHtml(attendant.government_id)}</span>
-            <span>Email: ${escapeHtml(attendant.email)}</span>
-            <span>Teléfono: ${escapeHtml(attendant.phone_number)}</span>
-            <span>Estado actual: ${attendant.was_present ? 'Confirmado' : 'Pendiente'}</span>
-        `;
-    }
+    let html5QrCode = null;
+    let scanningActive = false;
 
     function escapeHtml(value) {
         return String(value)
@@ -177,6 +167,32 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    function showOnly(stage) {
+        scanStage.classList.add('qr-hidden');
+        verifyStage.classList.add('qr-hidden');
+        successStage.classList.add('qr-hidden');
+        stage.classList.remove('qr-hidden');
+    }
+
+    function renderAttendant(attendant) {
+        attendantData.innerHTML = `
+            <strong>${escapeHtml(attendant.full_name)}</strong>
+            <span>DNI: ${escapeHtml(attendant.government_id)}</span>
+            <span>Email: ${escapeHtml(attendant.email)}</span>
+            <span>Teléfono: ${escapeHtml(attendant.phone_number)}</span>
+            <span>Conferencia ID: ${escapeHtml(attendant.conference_id)}</span>
+            <span>Estado actual: ${attendant.was_present ? 'Confirmado' : 'Pendiente'}</span>
+        `;
+    }
+
+    function renderSuccess(attendant) {
+        successData.innerHTML = `
+            <strong>${escapeHtml(attendant.full_name)}</strong>
+            <span>La base de datos fue actualizada para esta conferencia.</span>
+            <span>DNI: ${escapeHtml(attendant.government_id)}</span>
+        `;
     }
 
     async function lookupCode(code) {
@@ -190,7 +206,9 @@
             throw new Error(data.message || 'No se pudo verificar el QR.');
         }
 
-        showVerifyStage(data.attendant);
+        activeAttendant = data.attendant;
+        renderAttendant(activeAttendant);
+        showOnly(verifyStage);
     }
 
     async function confirmAttendance() {
@@ -217,77 +235,85 @@
                 throw new Error(data.message || 'No se pudo confirmar la asistencia.');
             }
 
-            scanStatus.textContent = data.message || 'Asistencia confirmada.';
-            showScanStage();
+            successMessage.textContent = data.message || 'La transacción en la base de datos se completó correctamente.';
+            renderSuccess(activeAttendant);
+            showOnly(successStage);
+            await stopScanner();
         } catch (error) {
             scanStatus.textContent = error.message;
-            showScanStage();
+            showOnly(scanStage);
+            await startScanner();
         } finally {
             confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Correcto';
+            confirmBtn.textContent = 'Datos correctos';
         }
     }
 
-    async function startCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            scanStatus.textContent = 'Tu navegador no soporta cámara.';
-            return;
-        }
-
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: 'environment' } },
-                audio: false
-            });
-
-            video.srcObject = stream;
-            await video.play();
-            scanStatus.textContent = 'Escaneando...';
-            scanning = true;
-            detectLoop();
-        } catch (error) {
-            scanStatus.textContent = 'No se pudo acceder a la cámara. Revisá los permisos.';
+    async function stopScanner() {
+        scanningActive = false;
+        if (html5QrCode) {
+            try {
+                await html5QrCode.stop();
+            } catch (error) {
+                // Si ya está detenido, no hacemos nada.
+            }
+            try {
+                await html5QrCode.clear();
+            } catch (error) {
+                // Sin-op
+            }
         }
     }
 
-    async function detectLoop() {
-        if (!scanning) {
+    async function startScanner() {
+        if (typeof Html5Qrcode === 'undefined') {
+            scanStatus.textContent = 'No se pudo cargar la librería de cámara.';
             return;
         }
 
-        if (!video.videoWidth || !video.videoHeight) {
-            requestAnimationFrame(detectLoop);
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode('qrReader');
+        }
+
+        if (scanningActive) {
             return;
         }
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+        scanningActive = true;
+        scanStatus.textContent = 'Pidiendo permiso de cámara...';
 
         try {
-            if ('BarcodeDetector' in window) {
-                detector ??= new BarcodeDetector({ formats: ['qr_code'] });
-                const barcodes = await detector.detect(canvas);
-                if (barcodes.length > 0) {
-                    scanning = false;
+            await html5QrCode.start(
+                { facingMode: 'environment' },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                async (decodedText) => {
+                    if (!scanningActive) {
+                        return;
+                    }
+
+                    scanningActive = false;
                     try {
-                        await lookupCode(barcodes[0].rawValue);
+                        await stopScanner();
+                        await lookupCode(decodedText);
                     } catch (error) {
                         scanStatus.textContent = error.message;
-                        scanning = true;
-                        requestAnimationFrame(detectLoop);
+                        await startScanner();
                     }
-                    return;
+                },
+                (errorMessage) => {
+                    scanStatus.textContent = 'Buscando QR...';
                 }
-            } else {
-                scanStatus.textContent = 'Tu navegador no tiene lector QR nativo. Usá el campo manual o probá desde Chrome/Edge.';
-            }
-        } catch (error) {
-            scanStatus.textContent = 'No se pudo leer el QR. Probá de nuevo.';
-            scanning = true;
-        }
+            );
 
-        requestAnimationFrame(detectLoop);
+            scanStatus.textContent = 'Cámara activa. Buscando QR...';
+        } catch (error) {
+            scanningActive = false;
+            scanStatus.textContent = 'No se pudo acceder a la cámara. Revisá permisos y navegador.';
+        }
     }
 
     manualForm.addEventListener('submit', async (event) => {
@@ -297,34 +323,35 @@
             return;
         }
 
-        scanning = false;
         try {
+            await stopScanner();
             await lookupCode(code);
         } catch (error) {
             scanStatus.textContent = error.message;
-            scanning = true;
-            requestAnimationFrame(detectLoop);
+            await startScanner();
         }
     });
 
     cancelBtn.addEventListener('click', async () => {
-        try {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-        } finally {
-            stream = null;
-            scanning = false;
-            manualCode.value = '';
-            showScanStage();
-            await startCamera();
-        }
+        activeAttendant = null;
+        manualCode.value = '';
+        showOnly(scanStage);
+        scanStatus.textContent = 'Vuelve a escanear cuando quieras.';
+        await startScanner();
     });
 
     confirmBtn.addEventListener('click', confirmAttendance);
 
-    showScanStage();
-    startCamera();
+    backToScanBtn.addEventListener('click', async () => {
+        activeAttendant = null;
+        manualCode.value = '';
+        showOnly(scanStage);
+        scanStatus.textContent = 'Esperando permiso de cámara...';
+        await startScanner();
+    });
+
+    showOnly(scanStage);
+    startScanner();
 })();
 </script>
 @endpush
