@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendant;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
 class IntranetConferenceController extends Controller
 {
     public function list()
@@ -19,6 +23,97 @@ class IntranetConferenceController extends Controller
     public function qrScan(int $id)
     {
         // TODO: Database integration
-        return view('intranet.conferences.qr-scan');
+        return view('intranet.conferences.qr-scan', [
+            'conferenceId' => $id,
+        ]);
+    }
+
+    public function qrScanLookup(Request $request, int $id)
+    {
+        $request->validate([
+            'code' => ['required', 'string'],
+        ]);
+
+        $code = trim((string) $request->input('code'));
+        $decoded = $this->normalizeQrCode($code);
+
+        $attendant = Attendant::query()
+            ->where(function ($query) use ($decoded, $code) {
+                $query->where('id', $decoded)
+                    ->orWhere('government_id', $decoded)
+                    ->orWhere('email', $decoded)
+                    ->orWhere('id', $code)
+                    ->orWhere('government_id', $code)
+                    ->orWhere('email', $code);
+            })
+            ->first();
+
+        if (! $attendant) {
+            return response()->json([
+                'found' => false,
+                'message' => 'No se encontró un inscripto con ese código.',
+            ], 404);
+        }
+
+        if ((int) $attendant->conference_id !== $id) {
+            return response()->json([
+                'found' => false,
+                'wrong_conference' => true,
+                'message' => 'La persona pertenece a otra conferencia.',
+                'attendant' => [
+                    'id' => $attendant->id,
+                    'full_name' => $attendant->full_name,
+                    'government_id' => $attendant->government_id,
+                    'email' => $attendant->email,
+                    'phone_number' => $attendant->phone_number,
+                    'conference_id' => $attendant->conference_id,
+                    'was_present' => (bool) $attendant->was_present,
+                ],
+            ], 409);
+        }
+
+        return response()->json([
+            'found' => true,
+            'attendant' => [
+                'id' => $attendant->id,
+                'full_name' => $attendant->full_name,
+                'government_id' => $attendant->government_id,
+                'email' => $attendant->email,
+                'phone_number' => $attendant->phone_number,
+                'conference_id' => $attendant->conference_id,
+                'was_present' => (bool) $attendant->was_present,
+            ],
+        ]);
+    }
+
+    public function qrScanConfirm(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'attendant_id' => ['required', 'integer'],
+        ]);
+
+        $attendant = Attendant::query()
+            ->where('conference_id', $id)
+            ->findOrFail($validated['attendant_id']);
+
+        $attendant->was_present = true;
+        $attendant->save();
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Asistencia confirmada.',
+        ]);
+    }
+
+    private function normalizeQrCode(string $code): string
+    {
+        if (filter_var($code, FILTER_VALIDATE_URL)) {
+            $path = parse_url($code, PHP_URL_PATH) ?: $code;
+            $segments = array_values(array_filter(explode('/', $path)));
+
+            return (string) (end($segments) ?: $code);
+        }
+
+        return Str::of($code)->trim()->toString();
     }
 }
