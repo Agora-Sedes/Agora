@@ -52,6 +52,8 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::get('/intranet/conferences/list', 'list')->name('intranet.conferences.list');
         Route::get('/intranet/conferences/{id}/dashboard', 'dashboard')->name('intranet.conferences.dashboard');
         Route::get('/intranet/conferences/{id}/qr-scan', 'qrScan')->name('intranet.conferences.qr-scan');
+        Route::get('/intranet/conferences/{id}/qr-scan/lookup', 'qrScanLookup')->name('intranet.conferences.qr-scan.lookup');
+        Route::post('/intranet/conferences/{id}/qr-scan/confirm', 'qrScanConfirm')->name('intranet.conferences.qr-scan.confirm');
     });
 
     Route::controller(IntranetConferenceAttendantController::class)->group(function () {
