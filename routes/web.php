@@ -42,9 +42,12 @@ Route::middleware(IntranetAuth::class)->group(function () {
 
     Route::controller(IntranetConferenceAttendantController::class)->group(function () {
         /// Conference attendant management
-        Route::view('/intranet/conferences/{id}/attendants/list', 'list')->name('intranet.conferences.attendants.list');
-        Route::view('/intranet/conferences/{id}/attendants/new', 'new')->name('intranet.conferences.attendants.new');
-        Route::post('/intranet/conferences/{id}/attendants/new', 'store');
+        Route::get('/intranet/conferences/{id}/attendants/list', 'list')->name('intranet.conferences.attendants.list');
+        Route::get('/intranet/conferences/{id}/attendants/new', 'new')->name('intranet.conferences.attendants.new');
+        Route::post('/intranet/conferences/{id}/attendants/new', 'store')->name('intranet.conferences.attendants.store');
+        Route::get('/intranet/conferences/{id}/attendants/{attendantId}/edit', 'edit')->name('intranet.conferences.attendants.edit');
+        Route::put('/intranet/conferences/{id}/attendants/{attendantId}', 'update')->name('intranet.conferences.attendants.update');
+        Route::delete('/intranet/conferences/{id}/attendants/{attendantId}', 'destroy')->name('intranet.conferences.attendants.destroy');
     });
 });
 
