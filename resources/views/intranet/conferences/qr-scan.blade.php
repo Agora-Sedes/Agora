@@ -155,7 +155,6 @@
     const backToScanBtn = document.getElementById('backToScanBtn');
     const manualForm = document.getElementById('manualScanForm');
     const manualCode = document.getElementById('manualCode');
-    const readerElement = document.getElementById('qrReader');
     let activeAttendant = null;
     let html5QrCode = null;
     let scanningActive = false;
@@ -200,7 +199,10 @@
         const response = await fetch(`${lookupUrl}?code=${encodeURIComponent(code)}`, {
             headers: { 'Accept': 'application/json' }
         });
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+        const data = contentType.includes('application/json')
+            ? await response.json()
+            : { message: await response.text() };
 
         if (!response.ok || !data.found) {
             throw new Error(data.message || 'No se pudo verificar el QR.');
@@ -301,6 +303,7 @@
                         await lookupCode(decodedText);
                     } catch (error) {
                         scanStatus.textContent = error.message;
+                        console.error('Error al procesar el QR escaneado:', error);
                         await startScanner();
                     }
                 },
@@ -328,6 +331,7 @@
             await lookupCode(code);
         } catch (error) {
             scanStatus.textContent = error.message;
+            console.error('Error al buscar el QR manualmente:', error);
             await startScanner();
         }
     });
