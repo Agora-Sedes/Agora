@@ -59,6 +59,12 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::post('/intranet/conferences/{id}/stream', 'update')->name('intranet.conferences.stream.update');
         Route::post('/intranet/conferences/{id}/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
     });
+
+    Route::controller(IntranetConferenceStreamController::class)->group(function () {
+        Route::get('/intranet/conferences/{id}/stream', 'edit')->name('intranet.conferences.stream.edit');
+        Route::post('/intranet/conferences/{id}/stream', 'update')->name('intranet.conferences.stream.update');
+        Route::post('/intranet/conferences/{id}/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
+    });
 });
 
 Route::controller(ExternalMercadoPagoController::class)->group(function () {
