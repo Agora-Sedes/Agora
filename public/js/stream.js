@@ -7,17 +7,10 @@
 
   function setIframeVolume(iframe, volume) {
     if (!iframe || !iframe.contentWindow) return;
-    const func = `
-      (function() {
-        var p = document.getElementById('player');
-        if (p && p.setVolume) {
-          if (${volume} > 0) p.unMute(); else p.mute();
-          p.setVolume(${volume});
-        }
-      })();
-    `;
     try {
-      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func }));
+      const target = iframe.contentWindow;
+      target.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [volume] }), '*');
+      target.postMessage(JSON.stringify({ event: 'command', func: volume > 0 ? 'unMute' : 'mute' }), '*');
     } catch (_) {}
   }
 

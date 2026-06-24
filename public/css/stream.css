@@ -114,12 +114,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.stream-volume.visible {
-  opacity: 1;
 }
 
 .stream-volume__icon {
