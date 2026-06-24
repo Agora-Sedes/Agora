@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendant;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Crypt;
 
 use App\Models\Conference;
 
@@ -46,42 +46,31 @@ class IntranetConferenceController extends Controller
             'code' => ['required', 'string'],
         ]);
 
-        $code = trim((string) $request->input('code'));
-        $decoded = $this->normalizeQrCode($code);
+        $payload = $this->decryptQrCode((string) $request->input('code'));
+        if (! $payload) {
+            return response()->json([
+                'found' => false,
+                'message' => 'No se pudo leer el QR.',
+            ], 422);
+        }
 
-        $attendant = Attendant::query()
-            ->where(function ($query) use ($decoded, $code) {
-                $query->where('id', $decoded)
-                    ->orWhere('government_id', $decoded)
-                    ->orWhere('email', $decoded)
-                    ->orWhere('id', $code)
-                    ->orWhere('government_id', $code)
-                    ->orWhere('email', $code);
-            })
-            ->first();
+        $userId = $payload['userId'] ?? null;
+        $conferenceId = $payload['conferenceId'] ?? null;
+        $paymentId = $payload['paymentId'] ?? null;
 
+        if (! $userId || ! $conferenceId || ! $paymentId) {
+            return response()->json([
+                'found' => false,
+                'message' => 'El QR no contiene los datos esperados.',
+            ], 422);
+        }
+
+        $attendant = Attendant::query()->find($userId);
         if (! $attendant) {
             return response()->json([
                 'found' => false,
                 'message' => 'No se encontró un inscripto con ese código.',
             ], 404);
-        }
-
-        if ((int) $attendant->conference_id !== $id) {
-            return response()->json([
-                'found' => false,
-                'wrong_conference' => true,
-                'message' => 'La persona pertenece a otra conferencia.',
-                'attendant' => [
-                    'id' => $attendant->id,
-                    'full_name' => $attendant->full_name,
-                    'government_id' => $attendant->government_id,
-                    'email' => $attendant->email,
-                    'phone_number' => $attendant->phone_number,
-                    'conference_id' => $attendant->conference_id,
-                    'was_present' => (bool) $attendant->was_present,
-                ],
-            ], 409);
         }
 
         return response()->json([
@@ -93,6 +82,7 @@ class IntranetConferenceController extends Controller
                 'email' => $attendant->email,
                 'phone_number' => $attendant->phone_number,
                 'conference_id' => $attendant->conference_id,
+                'payment_id' => $attendant->payment_id,
                 'was_present' => (bool) $attendant->was_present,
             ],
         ]);
@@ -117,15 +107,15 @@ class IntranetConferenceController extends Controller
         ]);
     }
 
-    private function normalizeQrCode(string $code): string
+    private function decryptQrCode(string $code): ?array
     {
-        if (filter_var($code, FILTER_VALIDATE_URL)) {
-            $path = parse_url($code, PHP_URL_PATH) ?: $code;
-            $segments = array_values(array_filter(explode('/', $path)));
+        try {
+            $json = Crypt::decryptString(trim($code));
+            $payload = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
-            return (string) (end($segments) ?: $code);
+            return is_array($payload) ? $payload : null;
+        } catch (\Throwable) {
+            return null;
         }
-
-        return Str::of($code)->trim()->toString();
     }
 }

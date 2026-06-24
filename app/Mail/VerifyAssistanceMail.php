@@ -8,13 +8,14 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Crypt;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class VerifyAssistanceMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public readonly string $verificationUrl;
+    public readonly string $verificationPayload;
     public readonly string $qrCode;
     public readonly bool $isVirtual;
     public readonly string $conferenceUrl;
@@ -23,13 +24,18 @@ class VerifyAssistanceMail extends Mailable
         public readonly Attendant $attendant
     ) {
         $token = md5($attendant->government_id);
-        $this->verificationUrl =
-            env('APP_URL') . "/verify-attendance/{$token}";
+
+        // Payload que lee el scanner de asistencia (IntranetConferenceController::decryptQrCode).
+        $this->verificationPayload = Crypt::encryptString(json_encode([
+            'userId' => $attendant->id,
+            'conferenceId' => $attendant->conference_id,
+            'paymentId' => $attendant->payment_id,
+        ], JSON_UNESCAPED_UNICODE));
 
         $this->qrCode = base64_encode(
             QrCode::format('png')
                 ->size(250)
-                ->generate($this->verificationUrl)
+                ->generate($this->verificationPayload)
         );
 
         // Si el asistente se inscribió como virtual, incluimos el link a la conferencia.
@@ -54,11 +60,12 @@ class VerifyAssistanceMail extends Mailable
             view: 'emails.verify-assistance',
             with: [
                 'qrCode' => $this->qrCode,
-                'verificationUrl' => $this->verificationUrl,
+                'verificationPayload' => $this->verificationPayload,
                 'isVirtual' => $this->isVirtual,
                 'conferenceUrl' => $this->conferenceUrl,
                 'moneyPaid' => 12000,
                 'peopleAmount' => 250,
+                'attendant' => $this->attendant,
             ]
         );
     }
