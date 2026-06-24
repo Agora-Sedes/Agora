@@ -36,6 +36,7 @@
         </div>
     </footer>
 
+    <script type="module" src="{{ asset('build/assets/app-34mOoJaZ.js') }}"></script>
     @stack('scripts')
 
 </body>

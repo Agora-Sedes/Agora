@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\VerifyAssistanceMail;
+use App\Models\Attendant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -55,6 +56,7 @@ class ExternalMercadoPagoController extends Controller
                 'id'     => $payment->id,
                 'status' => $payment->status,
                 'payer'  => $payment->payer->email ?? null,
+                'external_reference' => $payment->external_reference ?? null,
             ]);
 
             // Mandar el mail de asistencia SOLO cuando el pago fue aprobado
@@ -67,9 +69,40 @@ class ExternalMercadoPagoController extends Controller
             ]);
 
             if ($aprobado && $tieneEmail) {
+                $batchId = $payment->external_reference ?? null;
+                if ($batchId) {
+                    Attendant::query()
+                        ->where('registration_batch_id', $batchId)
+                        ->update([
+                            'payment_id' => (string) $payment->id,
+                            'is_draft' => false,
+                        ]);
+
+                    $attendants = Attendant::query()
+                        ->where('registration_batch_id', $batchId)
+                        ->orderBy('id')
+                        ->get();
+
+                    foreach ($attendants as $attendant) {
+                        Mail::to($attendant->email)
+                            ->send(new VerifyAssistanceMail($attendant));
+                    }
+                } else {
+                    Mail::to($payment->payer->email)
+                        ->send(new VerifyAssistanceMail(new Attendant([
+                            'conference_id' => 0,
+                            'payment_id' => (string) $payment->id,
+                            'registration_batch_id' => null,
+                            'is_draft' => false,
+                            'was_present' => false,
+                            'government_id' => '',
+                            'full_name' => $payment->payer->email,
+                            'email' => $payment->payer->email,
+                            'phone_number' => '',
+                        ])));
+                }
+
                 Log::info('[MP webhook] >>> ENVIANDO mail', ['to' => $payment->payer->email]);
-                Mail::to($payment->payer->email)
-                    ->send(new VerifyAssistanceMail((string) $payment->id));
                 Log::info('[MP webhook] <<< mail ENVIADO OK', ['to' => $payment->payer->email]);
             } else {
                 Log::info('[MP webhook] NO se envía mail (condición no cumplida)');

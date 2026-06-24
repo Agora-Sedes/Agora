@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['is_draft', 'was_present', 'government_id', 'full_name', 'email', 'phone_number'])]
+#[Fillable(['conference_id', 'payment_id', 'registration_batch_id', 'is_draft', 'was_present', 'government_id', 'full_name', 'email', 'phone_number'])]
 #[WithoutTimestamps]
 class Attendant extends Model
 {
