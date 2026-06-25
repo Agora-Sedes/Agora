@@ -3,7 +3,7 @@
 @section('title', 'Agregar inscripto')
 
 @section('header_action')
-    <a href="{{ route('intranet.conferences.dashboard', [ 'id' => 1 ]) }}" class="header-action">← Panel</a>
+    <a href="{{ route('intranet.conferences.dashboard', [ 'id' => $conference->id ]) }}" class="header-action">← Panel</a>
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
     <div class="panel">
         <h2 class="page-title">Agregar inscripto de último momento</h2>
 
-        <form action="" method="post" class="stack">
+        <form action="{{ route('intranet.conferences.attendants.store', [ 'id' => $conference->id ]) }}" method="post" class="stack">
             @csrf
             <div class="field">
                 <label for="name">Nombre</label>
