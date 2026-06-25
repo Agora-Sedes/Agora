@@ -9,6 +9,8 @@ use App\Http\Controllers\ConferenceController;
 use App\Http\Controllers\ExternalMercadoPagoController;
 use App\Http\Controllers\IntranetConferenceAttendantController;
 use App\Http\Controllers\IntranetConferenceController;
+use App\Http\Controllers\IntranetConferenceStreamController;
+use App\Http\Controllers\StreamViewerController;
 use App\Http\Middleware\IntranetAuth;
 
 Route::pattern('id', '[0-9]+');
@@ -17,6 +19,8 @@ Route::pattern('id', '[0-9]+');
 
 Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list');
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
+Route::get('/conferences/{id}/stream', [StreamViewerController::class, 'show'])->name('conferences.stream');
+Route::get('/api/conferences/{id}/stream', [StreamViewerController::class, 'apiVideoId'])->name('api.conferences.stream');
 
 Route::controller(AttendantRegistrationController::class)->group(function () {
     Route::get('/conferences/{id}/register/step-1', 'amountAndPaymentMethodForm')->name('conferences.register.step-1');
@@ -48,6 +52,12 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::get('/intranet/conferences/{id}/attendants/{attendantId}/edit', 'edit')->name('intranet.conferences.attendants.edit');
         Route::put('/intranet/conferences/{id}/attendants/{attendantId}', 'update')->name('intranet.conferences.attendants.update');
         Route::delete('/intranet/conferences/{id}/attendants/{attendantId}', 'destroy')->name('intranet.conferences.attendants.destroy');
+    });
+
+    Route::controller(IntranetConferenceStreamController::class)->group(function () {
+        Route::get('/intranet/conferences/{id}/stream', 'edit')->name('intranet.conferences.stream.edit');
+        Route::post('/intranet/conferences/{id}/stream', 'update')->name('intranet.conferences.stream.update');
+        Route::post('/intranet/conferences/{id}/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
     });
 });
 

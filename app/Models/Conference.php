@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['title', 'description', 'starts_at', 'ends_at'])]
+#[Fillable(['title', 'description', 'starts_at', 'ends_at', 'youtube_id'])]
 #[WithoutTimestamps]
 class Conference extends Model
 {

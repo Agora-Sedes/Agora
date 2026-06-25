@@ -19,6 +19,7 @@
         <a href="{{ route('intranet.conferences.qr-scan', [ 'id' => $conference->id ]) }}">Escanear QR</a>
         <a href="{{ route('intranet.conferences.attendants.list', [ 'id' => $conference->id ]) }}">Inscritos</a>
         <a href="{{ route('intranet.conferences.attendants.new', [ 'id' => $conference->id ]) }}">Agregar inscripto de último momento</a>
+        <a href="{{ route('intranet.conferences.stream.edit', [ 'id' => $conference->id ]) }}">Administrar stream</a>
     </div>
 </div>
 @endsection
