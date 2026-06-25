@@ -22,6 +22,10 @@ class Conference extends Model
         return $this->hasMany(Talk::class)->chaperone();
     }
 
+    public function questions(): HasMany {
+        return $this->hasMany(Question::class)->chaperone();
+    }
+
     protected function casts(): array {
         return [
             'starts_at' => 'datetime',

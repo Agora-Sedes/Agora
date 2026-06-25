@@ -5,6 +5,7 @@
 
 @section('css')
     <link rel="stylesheet" href="{{ url('css/stream.css') }}">
+    <link rel="stylesheet" href="{{ url('css/questions.css') }}">
 @endsection
 
 @section('header_action')
@@ -69,6 +70,34 @@
     </div>
 </section>
 
+<section class="container section--tight">
+    <div class="questions-panel" id="questions-panel">
+        <div class="questions-header">
+            <h2>Preguntas</h2>
+            <span class="questions-count">0</span>
+        </div>
+
+        <p class="questions-notice" style="display: none;"></p>
+
+        <form class="questions-form">
+            <textarea
+                class="questions-textarea"
+                placeholder="Escribí tu pregunta para el stream…"
+                rows="3"
+                aria-label="Tu pregunta"
+            ></textarea>
+            <div class="questions-form-footer">
+                <span class="questions-char-count">0/280</span>
+                <button type="submit" class="questions-submit" disabled>Enviar</button>
+            </div>
+        </form>
+
+        <ul class="questions-list" aria-live="polite">
+            <li class="question-empty">Cargando…</li>
+        </ul>
+    </div>
+</section>
+
 @endsection
 
 @push('scripts')
@@ -77,4 +106,5 @@
         window.__CONFERENCE_ID__ = {{ (int) $conference['id'] }};
     </script>
     <script src="{{ url('js/stream.js') }}"></script>
+    <script src="{{ url('js/questions.js') }}"></script>
 @endpush

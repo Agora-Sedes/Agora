@@ -1,0 +1,306 @@
+(() => {
+  const conferenceId = window.__CONFERENCE_ID__;
+  if (!conferenceId) return;
+
+  const isAdmin = !!document.getElementById('questions-admin');
+  const POLL_MS = 10000;
+  const MAX_LENGTH = 280;
+
+  let questions = [];
+  let loading = false;
+  let offline = false;
+
+  const panel = document.getElementById('questions-panel');
+  const adminPanel = document.getElementById('questions-admin');
+
+  const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+  function apiUrl(path) {
+    return `/api/conferences/${conferenceId}/questions${path}`;
+  }
+
+  async function fetchJSON(url, opts = {}) {
+    const headers = { Accept: 'application/json' };
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    if (CSRF_TOKEN && ['POST', 'PATCH', 'DELETE'].includes(opts.method)) {
+      headers['X-CSRF-TOKEN'] = CSRF_TOKEN;
+    }
+    const res = await fetch(url, { ...opts, headers: { ...headers, ...opts.headers } });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || data.error || 'Error de servidor');
+    }
+    if (res.status === 204) return null;
+    return res.json();
+  }
+
+  // --- Viewer: fetch pending questions ---
+  async function fetchQuestions() {
+    try {
+      const data = await fetchJSON(apiUrl(''));
+      questions = Array.isArray(data) ? data : data.data ?? [];
+      offline = false;
+    } catch {
+      offline = true;
+    }
+    renderViewerQuestions();
+  }
+
+  // --- Viewer: submit question ---
+  async function submitQuestion(body) {
+    const data = await fetchJSON(apiUrl(''), {
+      method: 'POST',
+      body: JSON.stringify({ body }),
+    });
+    return data;
+  }
+
+  // --- Admin: fetch all questions ---
+  async function fetchAllQuestions() {
+    try {
+      const data = await fetchJSON(apiUrl('/all'));
+      questions = Array.isArray(data) ? data : data.data ?? [];
+      offline = false;
+    } catch {
+      offline = true;
+    }
+    renderAdminQuestions();
+  }
+
+  // --- Admin: update question status ---
+  async function updateQuestion(qId, payload) {
+    const data = await fetchJSON(apiUrl(`/${qId}`), {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    return data;
+  }
+
+  // --- Admin: delete question ---
+  async function deleteQuestion(qId) {
+    await fetchJSON(apiUrl(`/${qId}`), { method: 'DELETE' });
+  }
+
+  // --- Time formatting ---
+  function relativeTime(dateStr) {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'ahora';
+    if (diffMin < 60) return `hace ${diffMin} min`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `hace ${diffHr} h`;
+    return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+  }
+
+  // ================= VIEWER =================
+
+  function renderViewerQuestions() {
+    if (!panel) return;
+
+    const countEl = panel.querySelector('.questions-count');
+    const listEl = panel.querySelector('.questions-list');
+    const noticeEl = panel.querySelector('.questions-notice');
+    const form = panel.querySelector('.questions-form');
+
+    if (countEl) countEl.textContent = questions.length;
+
+    if (offline) {
+      if (noticeEl) {
+        noticeEl.textContent = 'Servidor no disponible — no se pueden cargar preguntas.';
+        noticeEl.className = 'questions-notice questions-notice--offline';
+        noticeEl.style.display = '';
+      }
+      if (form) form.style.display = 'none';
+      return;
+    }
+
+    if (noticeEl) {
+      noticeEl.style.display = 'none';
+    }
+    if (form) form.style.display = '';
+
+    if (!listEl) return;
+
+    if (questions.length === 0) {
+      listEl.innerHTML = '<li class="question-empty">Todavía no hay preguntas. ¡Sé el primero!</li>';
+      return;
+    }
+
+    listEl.innerHTML = questions.map(q => `
+      <li class="question-item">
+        <span class="question-id">#${q.id}</span>
+        <p class="question-body">${escapeHtml(q.body)}</p>
+      </li>
+    `).join('');
+  }
+
+  function setupViewerForm() {
+    if (!panel) return;
+
+    const textarea = panel.querySelector('.questions-textarea');
+    const charCount = panel.querySelector('.questions-char-count');
+    const submitBtn = panel.querySelector('.questions-submit');
+    const form = panel.querySelector('.questions-form');
+
+    if (!textarea || !submitBtn) return;
+
+    textarea.setAttribute('maxlength', MAX_LENGTH);
+
+    textarea.addEventListener('input', () => {
+      const len = textarea.value.length;
+      if (charCount) charCount.textContent = `${len}/${MAX_LENGTH}`;
+      submitBtn.disabled = !textarea.value.trim();
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = textarea.value.trim();
+      if (!body) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando…';
+
+      try {
+        const created = await submitQuestion(body);
+        questions.unshift(created);
+        textarea.value = '';
+        if (charCount) charCount.textContent = `0/${MAX_LENGTH}`;
+        submitBtn.textContent = '¡Enviada!';
+        renderViewerQuestions();
+        setTimeout(() => { submitBtn.textContent = 'Enviar'; submitBtn.disabled = true; }, 2500);
+      } catch (err) {
+        const noticeEl = panel.querySelector('.questions-notice');
+        if (noticeEl) {
+          noticeEl.textContent = err.message || 'No se pudo enviar la pregunta';
+          noticeEl.className = 'questions-notice questions-notice--error';
+          noticeEl.style.display = '';
+        }
+        submitBtn.textContent = 'Enviar';
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
+  // ================= ADMIN =================
+
+  function renderAdminQuestions() {
+    if (!adminPanel) return;
+
+    const listEl = adminPanel.querySelector('.questions-admin-list');
+    const countEl = adminPanel.querySelector('.questions-count');
+    const noticeEl = adminPanel.querySelector('.questions-notice');
+
+    if (countEl) countEl.textContent = questions.length;
+
+    if (offline) {
+      if (noticeEl) {
+        noticeEl.textContent = 'Servidor no disponible.';
+        noticeEl.className = 'questions-notice questions-notice--offline';
+        noticeEl.style.display = '';
+      }
+      return;
+    }
+
+    if (noticeEl) noticeEl.style.display = 'none';
+
+    if (!listEl) return;
+
+    if (questions.length === 0) {
+      listEl.innerHTML = '<li class="question-empty">No hay preguntas aún.</li>';
+      return;
+    }
+
+    listEl.innerHTML = questions.map(q => {
+      const statusLabel = { pending: 'Pendiente', answered: 'Respondida', hidden: 'Oculta' }[q.status] || q.status;
+      const statusClass = `question-status--${q.status}`;
+      return `
+        <li class="question-admin-item question-status--${q.status}">
+          <div class="question-admin-meta">
+            <span class="question-id">#${q.id}</span>
+            <span class="question-status-badge ${statusClass}">${statusLabel}</span>
+            <time class="question-time">${relativeTime(q.created_at)}</time>
+          </div>
+          <p class="question-body">${escapeHtml(q.body)}</p>
+          <div class="question-admin-controls">
+            ${q.status !== 'answered' ? `<button class="btn btn--sm btn--accent" data-action="answer" data-id="${q.id}">Marcar respondida</button>` : ''}
+            ${q.status === 'hidden' ? `<button class="btn btn--sm btn--ghost" data-action="show" data-id="${q.id}">Mostrar</button>` : `<button class="btn btn--sm btn--ghost" data-action="hide" data-id="${q.id}" ${q.status === 'answered' ? 'disabled' : ''}>Ocultar</button>`}
+            <button class="btn btn--sm btn--danger" data-action="delete" data-id="${q.id}">Eliminar</button>
+          </div>
+        </li>
+      `;
+    }).join('');
+
+    listEl.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', handleAdminAction);
+    });
+  }
+
+  async function handleAdminAction(e) {
+    const btn = e.currentTarget;
+    const action = btn.dataset.action;
+    const qId = parseInt(btn.dataset.id, 10);
+    const item = btn.closest('.question-admin-item');
+
+    if (action === 'delete') {
+      if (!confirm('¿Eliminar la pregunta #' + qId + '?')) return;
+    }
+
+    btn.disabled = true;
+
+    try {
+      if (action === 'answer') {
+        await updateQuestion(qId, { status: 'answered' });
+      } else if (action === 'hide') {
+        await updateQuestion(qId, { status: 'hidden' });
+      } else if (action === 'show') {
+        await updateQuestion(qId, { status: 'pending' });
+      } else if (action === 'delete') {
+        await deleteQuestion(qId);
+      }
+      await fetchAllQuestions();
+    } catch (err) {
+      const noticeEl = adminPanel.querySelector('.questions-notice');
+      if (noticeEl) {
+        noticeEl.textContent = err.message;
+        noticeEl.className = 'questions-notice questions-notice--error';
+        noticeEl.style.display = '';
+      }
+      btn.disabled = false;
+    }
+  }
+
+  function setupAdminRefresh() {
+    if (!adminPanel) return;
+
+    const refreshBtn = adminPanel.querySelector('.questions-refresh');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        refreshBtn.classList.add('auto-refreshing');
+        fetchAllQuestions().finally(() => {
+          setTimeout(() => refreshBtn.classList.remove('auto-refreshing'), 800);
+        });
+      });
+    }
+  }
+
+  // --- Escape HTML ---
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ================= INIT =================
+
+  if (isAdmin) {
+    fetchAllQuestions();
+    setInterval(fetchAllQuestions, POLL_MS);
+    setupAdminRefresh();
+  } else {
+    fetchQuestions();
+    setInterval(fetchQuestions, POLL_MS);
+    setupViewerForm();
+  }
+})();
