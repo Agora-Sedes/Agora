@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VerifyAssistanceMail;
+use App\Mail\VerifyPaymentMail;
 use App\Models\Attendant;
 use App\Models\Conference;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class IntranetConferenceAttendantController extends Controller
 {
@@ -113,6 +116,34 @@ class IntranetConferenceAttendantController extends Controller
         ]);
 
         return redirect()->route('intranet.conferences.attendants.list', ['id' => $conference->id]);
+    }
+
+    public function resendQr(int $id, int $attendantId) {
+        $conference = Conference::find($id);
+
+        if (is_null($conference)) {
+            return response('Conferencia no encontrada', 404);
+        }
+
+        $attendant = Attendant::where('conference_id', $conference->id)->find($attendantId);
+
+        if (is_null($attendant)) {
+            return response('Inscripto no encontrado', 404);
+        }
+
+        // Pendiente (is_draft) -> todavía debe pagar -> QR para verificar el pago.
+        // Confirmado -> asistencia confirmada -> QR de asistencia.
+        if ($attendant->is_draft) {
+            Mail::to($attendant->email)->send(new VerifyPaymentMail(md5($attendant->government_id)));
+            $qrLabel = 'QR de verificación de pago';
+        } else {
+            Mail::to($attendant->email)->send(new VerifyAssistanceMail($attendant));
+            $qrLabel = 'QR de asistencia';
+        }
+
+        return redirect()
+            ->route('intranet.conferences.attendants.list', ['id' => $conference->id])
+            ->with('status', "Se reenvió el {$qrLabel} a {$attendant->email}.");
     }
 
     public function destroy(int $id, int $attendantId) {

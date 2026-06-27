@@ -11,6 +11,12 @@
     <p class="eyebrow"><span></span> {{ $conference->title }}</p>
     <h2 class="page-title" style="margin-top: 12px;">Inscritos</h2>
 
+    @if (session('status'))
+        <div class="card" style="padding: 16px; margin-bottom: 16px; background: #e9f7ef;">
+            {{ session('status') }}
+        </div>
+    @endif
+
     @if ($attendants->isEmpty())
         <div class="empty-state card" style="padding: 48px 24px;">
             <h2>Sin inscriptos todavía</h2>
@@ -38,11 +44,15 @@
                             <td>{{ $attendant->phone_number }}</td>
                             <td>{{ $attendant->is_draft ? 'Pendiente' : 'Confirmado' }}</td>
                             <td style="white-space: nowrap;">
-                                <a href="{{ route('intranet.conferences.attendants.edit', [ 'id' => $conference->id, 'attendantId' => $attendant->id ]) }}">Editar</a>
-                                <form action="{{ route('intranet.conferences.attendants.destroy', [ 'id' => $conference->id, 'attendantId' => $attendant->id ]) }}" method="post" style="display: inline; margin-left: 12px;" onsubmit="return confirm('¿Eliminar inscripto?');">
+                                <a href="{{ route('intranet.conferences.attendants.edit', [ 'id' => $conference->id, 'attendantId' => $attendant->id ]) }}" class="btn btn--ghost btn--sm">Editar</a>
+                                <form action="{{ route('intranet.conferences.attendants.resend-qr', [ 'id' => $conference->id, 'attendantId' => $attendant->id ]) }}" method="post" style="display: inline; margin-left: 8px;">
+                                    @csrf
+                                    <button type="submit" class="btn btn--ghost btn--sm">Reenviar QR</button>
+                                </form>
+                                <form action="{{ route('intranet.conferences.attendants.destroy', [ 'id' => $conference->id, 'attendantId' => $attendant->id ]) }}" method="post" style="display: inline; margin-left: 8px;" onsubmit="return confirm('¿Eliminar inscripto?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="header-action">Eliminar</button>
+                                    <button type="submit" class="btn btn--ghost btn--sm">Eliminar</button>
                                 </form>
                             </td>
                         </tr>

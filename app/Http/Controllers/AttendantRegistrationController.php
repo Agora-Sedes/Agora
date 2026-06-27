@@ -7,6 +7,7 @@ use App\Mail\VerifyPaymentMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use MercadoPago\Client\Preference\PreferenceClient;
 use MercadoPago\MercadoPagoConfig;
 
@@ -47,11 +48,15 @@ class AttendantRegistrationController extends Controller
 
         $conferenceId = $id;
         $isDraft = $data['payment_method'] === 'mp';
+        // Referencia única de esta compra: agrupa a todos los inscriptos de este registro.
+        $orderReference = (string) Str::uuid();
 
-        DB::transaction(function () use ($conferenceId, $data, $isDraft) {
+        DB::transaction(function () use ($conferenceId, $data, $isDraft, $orderReference) {
             foreach ($data['participants'] as $participant) {
                 Attendant::create([
                     'conference_id' => $conferenceId,
+                    'order_reference' => $orderReference,
+                    'mode' => $participant['mode'],
                     'is_draft' => $isDraft,
                     'was_present' => false,
                     'government_id' => $participant['dni'],
@@ -63,7 +68,7 @@ class AttendantRegistrationController extends Controller
         });
 
         if ($data['payment_method'] === 'mp') {
-            $initPoint = $this->createMercadoPagoPreference($data['participants']);
+            $initPoint = $this->createMercadoPagoPreference($orderReference, $data['participants']);
             return redirect()->away($initPoint);
         } // ^ early return
 
@@ -77,7 +82,7 @@ class AttendantRegistrationController extends Controller
         ]);
     }
 
-    private function createMercadoPagoPreference(array $participants): string
+    private function createMercadoPagoPreference(string $orderReference, array $participants): string
     {
         MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
 
@@ -86,6 +91,8 @@ class AttendantRegistrationController extends Controller
         $client = new PreferenceClient();
         // TODO: update hardcoded price and item name once DB pr is merged
         $preference = $client->create([
+            // Referencia de la compra: el webhook la usa para ubicar a todo el grupo.
+            'external_reference' => $orderReference,
             'items' => [
                 [
                     'title' => 'Entrada a la jornada',
