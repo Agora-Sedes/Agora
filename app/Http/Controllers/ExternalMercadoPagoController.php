@@ -14,7 +14,7 @@ class ExternalMercadoPagoController extends Controller
 {
     public function callback(Request $request)
     {
-        Log::info('Callback de Mercado Pago', $request->query());
+        Log::debug('Callback de Mercado Pago', $request->query());
 
         return view('external.mercado-pago.callback');
     }
@@ -26,7 +26,7 @@ class ExternalMercadoPagoController extends Controller
      */
     public function successfulPaymentWebhook(Request $request)
     {
-        Log::info('[MP webhook] >>> ENTRÓ al controller', [
+        Log::debug('[MP webhook] >>> ENTRÓ al controller', [
             'method'  => $request->method(),
             'url'     => $request->fullUrl(),
             'query'   => $request->query(),
@@ -45,7 +45,7 @@ class ExternalMercadoPagoController extends Controller
         try {
             // Consultar el pago real en la API de MP para conocer su estado y el comprador
             $token = config('services.mercadopago.access_token');
-            Log::info('[MP webhook] consultando pago en la API de MP', [
+            Log::debug('[MP webhook] consultando pago en la API de MP', [
                 'paymentId'   => $paymentId,
                 'token_seteado' => ! empty($token),
             ]);
@@ -53,7 +53,7 @@ class ExternalMercadoPagoController extends Controller
             MercadoPagoConfig::setAccessToken($token);
             $payment = (new PaymentClient())->get($paymentId);
 
-            Log::info('[MP webhook] pago obtenido', [
+            Log::debug('[MP webhook] pago obtenido', [
                 'id'     => $payment->id,
                 'status' => $payment->status,
                 'payer'  => $payment->payer->email ?? null,
@@ -71,7 +71,7 @@ class ExternalMercadoPagoController extends Controller
                 ? Attendant::where('order_reference', $orderReference)->get()
                 : collect();
 
-            Log::info('[MP webhook] evaluando envío de mails', [
+            Log::debug('[MP webhook] evaluando envío de mails', [
                 'aprobado'       => $aprobado,
                 'orderReference' => $orderReference,
                 'inscriptos'     => $attendants->count(),
@@ -84,13 +84,13 @@ class ExternalMercadoPagoController extends Controller
                         $attendant->update(['is_draft' => false]);
                     }
 
-                    Log::info('[MP webhook] >>> ENVIANDO mail', ['to' => $attendant->email]);
+                    Log::debug('[MP webhook] >>> ENVIANDO mail', ['to' => $attendant->email]);
                     Mail::to($attendant->email)
                         ->send(new VerifyAssistanceMail($attendant));
-                    Log::info('[MP webhook] <<< mail ENVIADO OK', ['to' => $attendant->email]);
+                    Log::debug('[MP webhook] <<< mail ENVIADO OK', ['to' => $attendant->email]);
                 }
             } else {
-                Log::info('[MP webhook] NO se envían mails (condición no cumplida)');
+                Log::debug('[MP webhook] NO se envían mails (condición no cumplida)');
             }
         } catch (\Throwable $e) {
             Log::error('[MP webhook] ERROR procesando el webhook', [
