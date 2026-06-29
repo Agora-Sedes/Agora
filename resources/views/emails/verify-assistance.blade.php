@@ -29,5 +29,16 @@
         Total pagado: ${{ number_format($moneyPaid, 0, ',', '.') }}
     </p>
 
+    @if ($isVirtual)
+        <div style="margin: 30px 0; padding: 20px; background: #f4f4f4; border-radius: 8px;">
+            <p style="margin: 0 0 8px;">
+                Te inscribiste en modalidad <strong>virtual</strong>. Vas a poder seguir la jornada en vivo desde este enlace:
+            </p>
+            <p style="margin: 0;">
+                <a href="{{ $conferenceUrl }}">{{ $conferenceUrl }}</a>
+            </p>
+        </div>
+    @endif
+
 </body>
 </html>

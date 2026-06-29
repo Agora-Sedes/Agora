@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Attendant;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -12,30 +13,36 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 class VerifyAssistanceMail extends Mailable
 {
     use Queueable, SerializesModels;
-    
+
     public readonly string $verificationUrl;
     public readonly string $qrCode;
-
+    public readonly bool $isVirtual;
+    public readonly string $conferenceUrl;
 
     public function __construct(
-        public readonly string $token
+        public readonly Attendant $attendant
     ) {
+        $token = md5($attendant->government_id);
         $this->verificationUrl =
-            env('APP_URL') . "/verify-attendance/{$this->token}";
+            env('APP_URL') . "/verify-attendance/{$token}";
 
         $this->qrCode = base64_encode(
             QrCode::format('png')
                 ->size(250)
                 ->generate($this->verificationUrl)
         );
+
+        // Si el asistente se inscribió como virtual, incluimos el link a la conferencia.
+        $this->isVirtual = $attendant->mode === 'online';
+        $this->conferenceUrl = route('conferences.stream', ['id' => $attendant->conference_id]);
     }
+
     public function envelope(): Envelope
     {
         return new Envelope(
             subject: 'Verificá tu asistencia - Jornada Ágora'
         );
     }
-
 
     public function content(): Content
     {
@@ -45,8 +52,10 @@ class VerifyAssistanceMail extends Mailable
             with: [
                 'qrCode' => $this->qrCode,
                 'verificationUrl' => $this->verificationUrl,
+                'isVirtual' => $this->isVirtual,
+                'conferenceUrl' => $this->conferenceUrl,
                 'moneyPaid' => 12000,
-                'peopleAmount' => 250
+                'peopleAmount' => 250,
             ]
         );
     }
