@@ -102,7 +102,7 @@
                                 <input type="text" class="input" name="talks[{{ $index }}][title]" value="{{ $talk['title'] ?? '' }}" form="conference-form" required>
                             </div>
                             <div class="field">
-                                <label>Speakers</label>
+                                <label>Invitado presentador</label>
                                 <input type="text" class="input" name="talks[{{ $index }}][speaker]" value="{{ $talk['speaker'] ?? '' }}" form="conference-form" required>
                             </div>
                         </div>
@@ -124,7 +124,7 @@
                         </div>
 
                         <div class="field" style="margin-top: 16px;">
-                            <label>Biografía del speaker</label>
+                            <label>Biografía del invitado</label>
                             <textarea class="input" rows="4" name="talks[{{ $index }}][speaker_background]" form="conference-form" required>{{ $talk['speaker_background'] ?? '' }}</textarea>
                         </div>
 
