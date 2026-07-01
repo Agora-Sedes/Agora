@@ -84,6 +84,11 @@
                     </div>
                 </div>
 
+                <div class="field">
+                    <label for="price">Precio</label>
+                    <input type="number" id="price" name="price" class="input" value="{{ old('price', $conference->price) }}" required>
+                    @error('price') <div class="form-error">{{ $message }}</div> @enderror
+                </div>
             </form>
         </div>
     </section>
@@ -146,7 +151,7 @@
                             <input type="text" class="input" data-talk-field="title" required>
                         </div>
                         <div class="field">
-                            <label>Speakers</label>
+                            <label>Invitado presentador</label>
                             <input type="text" class="input" data-talk-field="speaker" required>
                         </div>
                     </div>
@@ -178,24 +183,9 @@
                 </div>
             </div>
         </template>
-    </section>
-    <section class="container section--tight">
-        <div class="panel cta" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button type="button" class="btn btn--ghost" id="add-talk">Agregar charla</button>
-            </div>
-        </div>
-    </section>
-
-    <section class="container section--tight">
-        <div class="panel cta" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
-            <div>
-                <h3>Guardado de jornada</h3>
-                <p>La jornada se guarda junto con todo el itinerario cargado arriba.</p>
-            </div>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button type="submit" form="conference-form" class="btn btn--primary">{{ $isEdit ? 'Actualizar jornada' : 'Crear jornada' }}</button>
-            </div>
+        <div class="cta" style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <button type="button" class="btn btn--ghost" id="add-talk">Agregar charla</button>
+            <button type="submit" form="conference-form" class="btn btn--primary">{{ $isEdit ? 'Actualizar jornada' : 'Crear jornada' }}</button>
         </div>
     </section>
 @endsection
