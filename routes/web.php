@@ -14,13 +14,19 @@ use App\Http\Controllers\StreamViewerController;
 use App\Http\Middleware\IntranetAuth;
 
 Route::pattern('id', '[0-9]+');
+Route::pattern('qid', '[0-9]+');
 
 //// Normal user flow
 
 Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list');
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
 Route::get('/conferences/{id}/stream', [StreamViewerController::class, 'show'])->name('conferences.stream');
-Route::get('/api/conferences/{id}/stream', [StreamViewerController::class, 'apiVideoId'])->name('api.conferences.stream');
+Route::get('/api/conferences/{id}/manage/stream', [StreamViewerController::class, 'apiVideoId'])->name('api.conferences.stream');
+
+// Questions API (public)
+Route::post('/api/conferences/{id}/manage/questions', [IntranetConferenceStreamController::class, 'storeQuestion'])
+    ->middleware('throttle:10,1')
+    ->name('api.conferences.questions.store');
 
 Route::controller(AttendantRegistrationController::class)->group(function () {
     Route::get('/conferences/{id}/register/step-1', 'amountAndPaymentMethodForm')->name('conferences.register.step-1');
@@ -59,6 +65,18 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::get('/intranet/conferences/{id}/stream', 'edit')->name('intranet.conferences.stream.edit');
         Route::post('/intranet/conferences/{id}/stream', 'update')->name('intranet.conferences.stream.update');
         Route::post('/intranet/conferences/{id}/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
+    });
+
+    Route::controller(IntranetConferenceStreamController::class)->group(function () {
+        // Admin stream management
+        Route::get('/intranet/conferences/{id}/manage', 'edit')->name('intranet.conferences.manage');
+        Route::post('/api/conferences/{id}/manage/stream', 'update')->name('intranet.conferences.stream.update');
+        Route::post('/api/conferences/{id}/manage/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
+
+        // Admin questions API
+        Route::get('/api/conferences/{id}/manage/questions', 'adminQuestions')->name('api.conferences.questions.admin');
+        Route::patch('/api/conferences/{id}/manage/questions/{qid}', 'updateQuestion')->name('api.conferences.questions.update');
+        Route::delete('/api/conferences/{id}/manage/questions/{qid}', 'destroyQuestion')->name('api.conferences.questions.destroy');
     });
 });
 
