@@ -72,10 +72,7 @@
 
 <section class="container section--tight">
     <div class="questions-panel" id="questions-panel">
-        <div class="questions-header">
-            <h2>Preguntas</h2>
-            <span class="questions-count">0</span>
-        </div>
+        <h2 class="questions-panel__title">Hacé tu pregunta</h2>
 
         <p class="questions-notice" style="display: none;"></p>
 
@@ -92,9 +89,10 @@
             </div>
         </form>
 
-        <ul class="questions-list" aria-live="polite">
-            <li class="question-empty">Cargando…</li>
-        </ul>
+        <div class="questions-success" id="questions-success" style="display: none;">
+            <span class="questions-success__icon" aria-hidden="true">✓</span>
+            ¡Pregunta enviada!
+        </div>
     </div>
 </section>
 

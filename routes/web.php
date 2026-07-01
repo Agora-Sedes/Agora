@@ -10,7 +10,6 @@ use App\Http\Controllers\ExternalMercadoPagoController;
 use App\Http\Controllers\IntranetConferenceAttendantController;
 use App\Http\Controllers\IntranetConferenceController;
 use App\Http\Controllers\IntranetConferenceStreamController;
-use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\StreamViewerController;
 use App\Http\Middleware\IntranetAuth;
 
@@ -22,11 +21,10 @@ Route::pattern('qid', '[0-9]+');
 Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list');
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
 Route::get('/conferences/{id}/stream', [StreamViewerController::class, 'show'])->name('conferences.stream');
-Route::get('/api/conferences/{id}/stream', [StreamViewerController::class, 'apiVideoId'])->name('api.conferences.stream');
+Route::get('/api/conferences/{id}/manage/stream', [StreamViewerController::class, 'apiVideoId'])->name('api.conferences.stream');
 
 // Questions API (public)
-Route::get('/api/conferences/{id}/questions', [QuestionController::class, 'index'])->name('api.conferences.questions');
-Route::post('/api/conferences/{id}/questions', [QuestionController::class, 'store'])
+Route::post('/api/conferences/{id}/manage/questions', [IntranetConferenceStreamController::class, 'storeQuestion'])
     ->middleware('throttle:10,1')
     ->name('api.conferences.questions.store');
 
@@ -69,18 +67,16 @@ Route::middleware(IntranetAuth::class)->group(function () {
     });
 
     Route::controller(IntranetConferenceStreamController::class)->group(function () {
-        Route::get('/intranet/conferences/{id}/stream', 'edit')->name('intranet.conferences.stream.edit');
-        Route::post('/intranet/conferences/{id}/stream', 'update')->name('intranet.conferences.stream.update');
-        Route::post('/intranet/conferences/{id}/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
+        // Admin stream management
+        Route::get('/intranet/conferences/{id}/manage', 'edit')->name('intranet.conferences.manage');
+        Route::post('/api/conferences/{id}/manage/stream', 'update')->name('intranet.conferences.stream.update');
+        Route::post('/api/conferences/{id}/manage/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
+
+        // Admin questions API
+        Route::get('/api/conferences/{id}/manage/questions', 'adminQuestions')->name('api.conferences.questions.admin');
+        Route::patch('/api/conferences/{id}/manage/questions/{qid}', 'updateQuestion')->name('api.conferences.questions.update');
+        Route::delete('/api/conferences/{id}/manage/questions/{qid}', 'destroyQuestion')->name('api.conferences.questions.destroy');
     });
-
-    // Questions admin API
-    Route::get('/api/conferences/{id}/questions/all', [QuestionController::class, 'adminIndex'])->name('api.conferences.questions.admin');
-    Route::patch('/api/conferences/{id}/questions/{qid}', [QuestionController::class, 'update'])->name('api.conferences.questions.update');
-    Route::delete('/api/conferences/{id}/questions/{qid}', [QuestionController::class, 'destroy'])->name('api.conferences.questions.destroy');
-
-    // Questions admin view
-    Route::get('/intranet/conferences/{id}/questions', [QuestionController::class, 'manage'])->name('intranet.conferences.questions');
 });
 
 Route::controller(ExternalMercadoPagoController::class)->group(function () {

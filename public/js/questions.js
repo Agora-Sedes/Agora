@@ -16,7 +16,7 @@
   const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
   function apiUrl(path) {
-    return `/api/conferences/${conferenceId}/questions${path}`;
+    return `/api/conferences/${conferenceId}/manage/questions${path}`;
   }
 
   async function fetchJSON(url, opts = {}) {
@@ -34,18 +34,6 @@
     return res.json();
   }
 
-  // --- Viewer: fetch pending questions ---
-  async function fetchQuestions() {
-    try {
-      const data = await fetchJSON(apiUrl(''));
-      questions = Array.isArray(data) ? data : data.data ?? [];
-      offline = false;
-    } catch {
-      offline = true;
-    }
-    renderViewerQuestions();
-  }
-
   // --- Viewer: submit question ---
   async function submitQuestion(body) {
     const data = await fetchJSON(apiUrl(''), {
@@ -58,7 +46,7 @@
   // --- Admin: fetch all questions ---
   async function fetchAllQuestions() {
     try {
-      const data = await fetchJSON(apiUrl('/all'));
+      const data = await fetchJSON(apiUrl(''));
       questions = Array.isArray(data) ? data : data.data ?? [];
       offline = false;
     } catch {
@@ -96,46 +84,6 @@
 
   // ================= VIEWER =================
 
-  function renderViewerQuestions() {
-    if (!panel) return;
-
-    const countEl = panel.querySelector('.questions-count');
-    const listEl = panel.querySelector('.questions-list');
-    const noticeEl = panel.querySelector('.questions-notice');
-    const form = panel.querySelector('.questions-form');
-
-    if (countEl) countEl.textContent = questions.length;
-
-    if (offline) {
-      if (noticeEl) {
-        noticeEl.textContent = 'Servidor no disponible — no se pueden cargar preguntas.';
-        noticeEl.className = 'questions-notice questions-notice--offline';
-        noticeEl.style.display = '';
-      }
-      if (form) form.style.display = 'none';
-      return;
-    }
-
-    if (noticeEl) {
-      noticeEl.style.display = 'none';
-    }
-    if (form) form.style.display = '';
-
-    if (!listEl) return;
-
-    if (questions.length === 0) {
-      listEl.innerHTML = '<li class="question-empty">Todavía no hay preguntas. ¡Sé el primero!</li>';
-      return;
-    }
-
-    listEl.innerHTML = questions.map(q => `
-      <li class="question-item">
-        <span class="question-id">#${q.id}</span>
-        <p class="question-body">${escapeHtml(q.body)}</p>
-      </li>
-    `).join('');
-  }
-
   function setupViewerForm() {
     if (!panel) return;
 
@@ -143,6 +91,8 @@
     const charCount = panel.querySelector('.questions-char-count');
     const submitBtn = panel.querySelector('.questions-submit');
     const form = panel.querySelector('.questions-form');
+    const successEl = panel.querySelector('.questions-success');
+    const noticeEl = panel.querySelector('.questions-notice');
 
     if (!textarea || !submitBtn) return;
 
@@ -161,25 +111,27 @@
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enviando…';
+      if (noticeEl) noticeEl.style.display = 'none';
+      if (successEl) successEl.style.display = 'none';
 
       try {
-        const created = await submitQuestion(body);
-        questions.unshift(created);
+        await submitQuestion(body);
         textarea.value = '';
         if (charCount) charCount.textContent = `0/${MAX_LENGTH}`;
-        submitBtn.textContent = '¡Enviada!';
-        renderViewerQuestions();
-        setTimeout(() => { submitBtn.textContent = 'Enviar'; submitBtn.disabled = true; }, 2500);
+        if (successEl) successEl.style.display = '';
+        if (noticeEl) noticeEl.style.display = 'none';
+        setTimeout(() => {
+          if (successEl) successEl.style.display = 'none';
+        }, 3000);
       } catch (err) {
-        const noticeEl = panel.querySelector('.questions-notice');
         if (noticeEl) {
           noticeEl.textContent = err.message || 'No se pudo enviar la pregunta';
           noticeEl.className = 'questions-notice questions-notice--error';
           noticeEl.style.display = '';
         }
-        submitBtn.textContent = 'Enviar';
-        submitBtn.disabled = false;
       }
+      submitBtn.textContent = 'Enviar';
+      submitBtn.disabled = true;
     });
   }
 
@@ -213,10 +165,11 @@
     }
 
     listEl.innerHTML = questions.map(q => {
-      const statusLabel = { pending: 'Pendiente', answered: 'Respondida', hidden: 'Oculta' }[q.status] || q.status;
-      const statusClass = `question-status--${q.status}`;
+      const isAnswered = q.status === 'answered';
+      const statusLabel = isAnswered ? 'Respondida' : 'Pendiente';
+      const statusClass = isAnswered ? 'question-status--answered' : 'question-status--pending';
       return `
-        <li class="question-admin-item question-status--${q.status}">
+        <li class="question-admin-item ${statusClass}">
           <div class="question-admin-meta">
             <span class="question-id">#${q.id}</span>
             <span class="question-status-badge ${statusClass}">${statusLabel}</span>
@@ -224,8 +177,7 @@
           </div>
           <p class="question-body">${escapeHtml(q.body)}</p>
           <div class="question-admin-controls">
-            ${q.status !== 'answered' ? `<button class="btn btn--sm btn--accent" data-action="answer" data-id="${q.id}">Marcar respondida</button>` : ''}
-            ${q.status === 'hidden' ? `<button class="btn btn--sm btn--ghost" data-action="show" data-id="${q.id}">Mostrar</button>` : `<button class="btn btn--sm btn--ghost" data-action="hide" data-id="${q.id}" ${q.status === 'answered' ? 'disabled' : ''}>Ocultar</button>`}
+            ${!isAnswered ? `<button class="btn btn--sm btn--accent" data-action="answer" data-id="${q.id}">Marcar respondida</button>` : ''}
             <button class="btn btn--sm btn--danger" data-action="delete" data-id="${q.id}">Eliminar</button>
           </div>
         </li>
@@ -241,7 +193,6 @@
     const btn = e.currentTarget;
     const action = btn.dataset.action;
     const qId = parseInt(btn.dataset.id, 10);
-    const item = btn.closest('.question-admin-item');
 
     if (action === 'delete') {
       if (!confirm('¿Eliminar la pregunta #' + qId + '?')) return;
@@ -252,10 +203,6 @@
     try {
       if (action === 'answer') {
         await updateQuestion(qId, { status: 'answered' });
-      } else if (action === 'hide') {
-        await updateQuestion(qId, { status: 'hidden' });
-      } else if (action === 'show') {
-        await updateQuestion(qId, { status: 'pending' });
       } else if (action === 'delete') {
         await deleteQuestion(qId);
       }
@@ -299,8 +246,6 @@
     setInterval(fetchAllQuestions, POLL_MS);
     setupAdminRefresh();
   } else {
-    fetchQuestions();
-    setInterval(fetchQuestions, POLL_MS);
     setupViewerForm();
   }
 })();
