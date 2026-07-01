@@ -16,17 +16,10 @@
     <p class="muted" style="margin-top: 8px;">{{ $conference->title }}</p>
 
     <div class="link-stack" style="max-width: 560px;">
-<<<<<<< HEAD
         <a href="{{ route('intranet.conferences.qr-scan', [ 'id' => $conference->id ]) }}">Escanear QR</a>
         <a href="{{ route('intranet.conferences.attendants.list', [ 'id' => $conference->id ]) }}">Inscritos</a>
         <a href="{{ route('intranet.conferences.attendants.new', [ 'id' => $conference->id ]) }}">Agregar inscripto de último momento</a>
-        <a href="{{ route('intranet.conferences.stream.edit', [ 'id' => $conference->id ]) }}">Administrar stream</a>
-=======
-        <a href="{{ route('intranet.conferences.qr-scan', [ 'id' => 1 ]) }}">Escanear QR</a>
-        <a href="{{ route('intranet.conferences.attendants.list', [ 'id' => 1 ]) }}">Inscritos</a>
-        <a href="{{ route('intranet.conferences.attendants.new', [ 'id' => 1 ]) }}">Agregar inscripto de último momento</a>
-        <a href="{{ route('intranet.conferences.manage', [ 'id' => 1 ]) }}">Administrar transmisión y preguntas</a>
->>>>>>> 9e55b54 (feat: stream + plus comentarios mateo testea parte 2)
+        <a href="{{ route('intranet.conferences.manage', [ 'id' => $conference->id ]) }}">Administrar transmisión y preguntas</a>
     </div>
 </div>
 @endsection
