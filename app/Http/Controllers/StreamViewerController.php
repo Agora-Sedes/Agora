@@ -135,11 +135,16 @@ class StreamViewerController extends Controller
         ]);
     }
 
-    /** Busca al asistente de la conferencia cuyo md5(government_id) coincide con el token. */
+    /**
+     * Busca al asistente de la conferencia cuyo md5(government_id) coincide con el token.
+     * Si hay varios con el mismo DNI (p. ej. una inscripción vieja en borrador y otra
+     * confirmada), preferimos la confirmada (is_draft = false primero).
+     */
     private function findAttendant(int $conferenceId, string $token): ?Attendant
     {
         return Attendant::where('conference_id', $conferenceId)
             ->whereRaw('MD5(government_id) = ?', [$token])
+            ->orderBy('is_draft')
             ->first();
     }
 
