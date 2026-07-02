@@ -13,7 +13,7 @@
     <div class="link-stack" style="max-width: 560px;">
         @foreach (($conferences ?? []) as $conference)
             <a href="{{ route('intranet.conferences.dashboard', ['id' => $conference->id]) }}">
-                {{ $conference->title }} · {{ $conference->talks_count }} charlas
+                {{ $conference->title }} · {{ $conference->talks_count }} charlas · ${{ number_format($conference->price, 0, ',', '.') }}
             </a>
         @endforeach
     </div>

@@ -20,8 +20,11 @@ class IntranetConferenceController extends Controller
 
     public function new()
     {
+        $conference = new Conference();
+        $conference->price = 12000;
+
         return view('intranet.conferences.new', [
-            'conference' => new Conference(),
+            'conference' => $conference,
             'talks' => collect([new Talk()]),
             'mode' => 'create',
         ]);

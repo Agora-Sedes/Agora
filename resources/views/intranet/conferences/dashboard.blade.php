@@ -14,6 +14,7 @@
     <p class="eyebrow"><span></span> Intranet</p>
     <h2 class="page-title" style="margin-top: 12px;">Panel de administración</h2>
     <p class="muted" style="margin-top: 8px;">{{ $conference->title }}</p>
+    <p class="badge" style="margin-top: 8px;">Precio: ${{ number_format($conference->price, 0, ',', '.') }}</p>
 
     <div class="link-stack" style="max-width: 560px;">
         <a href="{{ route('intranet.conferences.edit', [ 'id' => $conference->id ]) }}">Editar jornada</a>

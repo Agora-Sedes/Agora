@@ -48,6 +48,10 @@
                 @endif
 
                 <p class="badge">
+                    ${{ number_format($conference['price'], 0, ',', '.') }}
+                </p>
+
+                <p class="badge">
                     {{ $talks->count() }} {{ $talks->count() === 1 ? 'charla' : 'charlas' }} en el itinerario
                 </p>
             </div>

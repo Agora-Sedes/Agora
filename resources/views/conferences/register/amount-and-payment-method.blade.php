@@ -7,7 +7,11 @@
     <div class="panel">
         <h1 class="page-title">¿Cuántas entradas?</h1>
 
-        <form action="{{ route('conferences.register.step-2', [ 'id' => $conference_id ]) }}" method="POST" class="stack">
+        <p class="muted" style="margin-bottom: 18px;">
+            Valor por entrada: ${{ number_format($conference->price, 0, ',', '.') }}
+        </p>
+
+        <form action="{{ route('conferences.register.step-2', [ 'id' => $conference->id ]) }}" method="POST" class="stack">
             @csrf
             <div class="field">
                 <label for="entry">Cantidad</label>
@@ -34,8 +38,29 @@
                 </div>
             </div>
 
+            <p class="muted" style="text-align: center; font-size: 1.25rem;">
+                Total: ${{ number_format($conference->price, 0, ',', '.') }}
+                <span id="total-display"></span>
+            </p>
+
             <button type="submit" class="btn btn--primary btn--block">Siguiente</button>
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    const price = {{ $conference->price }};
+    const select = document.querySelector('select[name="amount"]');
+    const totalDisplay = document.getElementById('total-display');
+
+    const updateTotal = () => {
+        const amount = parseInt(select.value, 10);
+        totalDisplay.textContent = `(${amount} × $${price.toLocaleString('es-AR')})`;
+    };
+
+    select.addEventListener('change', updateTotal);
+    updateTotal();
+</script>
+@endpush
 @endsection
