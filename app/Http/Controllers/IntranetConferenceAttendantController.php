@@ -142,7 +142,7 @@ class IntranetConferenceAttendantController extends Controller
             return response('El inscripto pagó pero no vino', 400);
         }
 
-        Mail::to($attendant->email)->send(new AttendantCertificateMail($attendant));
+        Mail::to($attendant->email)->send(new AttendantCertificateMail($conference, $attendant));
 
         return redirect()
             ->route('intranet.conferences.attendants.list', ['id' => $conference->id])
