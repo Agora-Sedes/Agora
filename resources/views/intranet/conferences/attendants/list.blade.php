@@ -49,6 +49,12 @@
                                     @csrf
                                     <button type="submit" class="btn btn--ghost btn--sm">Reenviar QR</button>
                                 </form>
+                                @if (!$attendant->is_draft && $attendant->was_present)
+                                <form action="{{ route('intranet.conferences.attendants.send-certificate', [ 'id' => $conference->id, 'attendantId' => $attendant->id ]) }}" method="post" style="display: inline; margin-left: 8px;">
+                                    @csrf
+                                    <button type="submit" class="btn btn--ghost btn--sm">Enviar certificado</button>
+                                </form>
+                                @endif
                                 <form action="{{ route('intranet.conferences.attendants.destroy', [ 'id' => $conference->id, 'attendantId' => $attendant->id ]) }}" method="post" style="display: inline; margin-left: 8px;" onsubmit="return confirm('¿Eliminar inscripto?');">
                                     @csrf
                                     @method('DELETE')
