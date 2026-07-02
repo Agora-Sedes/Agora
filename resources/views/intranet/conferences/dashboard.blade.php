@@ -18,9 +18,9 @@
     <div class="link-stack" style="max-width: 560px;">
         <a href="{{ route('intranet.conferences.edit', [ 'id' => $conference->id ]) }}">Editar jornada</a>
         <a href="{{ route('intranet.conferences.qr-scan', [ 'id' => $conference->id ]) }}">Escanear QR</a>
-        <a href="{{ route('intranet.conferences.attendants.list', [ 'id' => $conference->id ]) }}">Inscriptos</a>
-        <a href="{{ route('intranet.conferences.attendants.new', [ 'id' => $conference->id ]) }}">Agregar inscripto de ultimo momento</a>
-        <a href="{{ route('intranet.conferences.stream.edit', [ 'id' => $conference->id ]) }}">Administrar stream</a>
+        <a href="{{ route('intranet.conferences.attendants.list', [ 'id' => $conference->id ]) }}">Inscritos</a>
+        <a href="{{ route('intranet.conferences.attendants.new', [ 'id' => $conference->id ]) }}">Agregar inscripto de último momento</a>
+        <a href="{{ route('intranet.conferences.manage', [ 'id' => $conference->id ]) }}">Administrar transmisión y preguntas</a>
     </div>
 </div>
 @endsection
