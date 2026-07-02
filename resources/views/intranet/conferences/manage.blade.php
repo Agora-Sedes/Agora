@@ -59,7 +59,7 @@
                 <code class="stream-active-id">{{ $conference['youtube_id'] }}</code>
             </p>
             <p style="margin-top: 12px;">
-                <a href="{{ route('conferences.stream', ['id' => $conference['id']]) }}" target="_blank" class="btn btn--ghost">
+                <a href="{{ route('intranet.conferences.stream.preview', ['id' => $conference['id']]) }}" target="_blank" class="btn btn--ghost">
                     Ver cómo se ve
                 </a>
             </p>

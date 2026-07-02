@@ -40,10 +40,7 @@
                 @if (!empty($conference['youtube_id']))
                     <div class="panel cta" style="margin-top: 24px;">
                         <h3>Transmisión en vivo disponible</h3>
-                        <p>Mirala en vivo en la página de stream de la jornada.</p>
-                        <a href="{{ route('conferences.stream', ['id' => $conference['id']]) }}" class="btn btn--primary">
-                            Ver Stream
-                        </a>
+                        <p>El acceso a la transmisión es personal: te llegó por correo el link para verla con tu inscripción.</p>
                     </div>
                 @endif
 

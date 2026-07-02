@@ -1,9 +1,17 @@
 (() => {
   const conferenceId = window.__CONFERENCE_ID__;
+  const sessionState = window.__SESSION_STATE__ || 'active';
+  const sessionCheckUrl = window.__SESSION_CHECK_URL__ || null;
   let currentVideoId = window.__VIDEO_ID__ || null;
   let ytIframe = null;
   let pendingVolume = 0;
   let iframeReady = false;
+
+  // Si hay una sesión activa en otro dispositivo, el modal bloquea la vista:
+  // no arrancamos el video ni el polling hasta que el usuario reemplace la sesión.
+  if (sessionState === 'conflict') {
+    return;
+  }
 
   function setIframeVolume(iframe, volume) {
     if (!iframe || !iframe.contentWindow) return;
@@ -65,4 +73,43 @@
     }
     volIcon.innerHTML = svg;
   }
+
+  // --- Control de sesión única ---
+  // Cada 10s verificamos que nuestra sesión siga siendo la activa. Si fue
+  // reemplazada desde otro dispositivo, cortamos el video y avisamos.
+  function stopStream() {
+    if (ytIframe) {
+      ytIframe.remove();
+      ytIframe = null;
+    }
+    const sessionEndedOverlay = document.getElementById('session-ended-overlay');
+    if (sessionEndedOverlay) {
+      sessionEndedOverlay.classList.remove('hidden');
+    }
+  }
+
+  function startSessionPolling() {
+    // Solo la vista real de un asistente (active) controla la sesión única.
+    // El preview del admin (sin token) no hace polling.
+    if (sessionState !== 'active' || !sessionCheckUrl) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await fetch(sessionCheckUrl, {
+          headers: { 'Accept': 'application/json' },
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
+        const data = await res.json();
+        if (!data.active) {
+          clearInterval(intervalId);
+          stopStream();
+        }
+      } catch (_) {
+        // Error de red puntual: reintentamos en el próximo ciclo.
+      }
+    }, 10000);
+  }
+
+  startSessionPolling();
 })();

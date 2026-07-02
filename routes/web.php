@@ -16,12 +16,15 @@ use App\Http\Middleware\IntranetAuth;
 Route::pattern('id', '[0-9]+');
 Route::pattern('qid', '[0-9]+');
 Route::pattern('attendantId', '[0-9]+');
+Route::pattern('token', '[a-f0-9]{32}');
 
 //// Normal user flow
 
 Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list');
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
-Route::get('/conferences/{id}/stream', [StreamViewerController::class, 'show'])->name('conferences.stream');
+Route::get('/conferences/{id}/stream/{token}', [StreamViewerController::class, 'show'])->name('conferences.stream');
+Route::post('/conferences/{id}/stream/{token}/session/replace', [StreamViewerController::class, 'replaceSession'])->name('conferences.stream.session.replace');
+Route::get('/api/conferences/{id}/stream/{token}/session/check', [StreamViewerController::class, 'checkSession'])->name('api.conferences.stream.session.check');
 Route::get('/api/conferences/{id}/manage/stream', [StreamViewerController::class, 'apiVideoId'])->name('api.conferences.stream');
 
 // Questions API (public)
@@ -81,6 +84,9 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::patch('/api/conferences/{id}/manage/questions/{qid}', 'updateQuestion')->name('api.conferences.questions.update');
         Route::delete('/api/conferences/{id}/manage/questions/{qid}', 'destroyQuestion')->name('api.conferences.questions.destroy');
     });
+
+    // Previsualización del stream para el admin (sin gating de sesión única).
+    Route::get('/intranet/conferences/{id}/stream/preview', [StreamViewerController::class, 'preview'])->name('intranet.conferences.stream.preview');
 });
 
 Route::controller(ExternalMercadoPagoController::class)->group(function () {
