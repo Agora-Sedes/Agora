@@ -95,7 +95,7 @@ class IntranetConferenceController extends Controller
         return redirect()->route('intranet.conferences.dashboard', ['id' => $conference->id]);
     }
 
-    public function destroy(int $id)
+    public function delete(int $id)
     {
         $conference = Conference::find($id);
 
@@ -125,7 +125,7 @@ class IntranetConferenceController extends Controller
             'description' => 'required|string',
             'starts_at' => 'required|date',
             'ends_at' => 'required|date|after_or_equal:starts_at',
-            'youtube_id' => 'nullable|string|max:11',
+            'price' => 'required|numeric|min:0',
             'talks' => 'nullable|array',
             'talks.*.title' => 'required_with:talks|string|max:255',
             'talks.*.description' => 'required_with:talks|string',
@@ -140,7 +140,7 @@ class IntranetConferenceController extends Controller
             'description' => $data['description'],
             'starts_at' => $data['starts_at'],
             'ends_at' => $data['ends_at'],
-            'youtube_id' => $data['youtube_id'] ?? null,
+            'price' => $data['price'],
         ];
 
         $talks = collect($data['talks'] ?? [])

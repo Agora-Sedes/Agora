@@ -50,7 +50,7 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::post('/intranet/conferences/new', 'store')->name('intranet.conferences.store');
         Route::get('/intranet/conferences/{id}/edit', 'edit')->name('intranet.conferences.edit');
         Route::put('/intranet/conferences/{id}', 'update')->name('intranet.conferences.update');
-        Route::delete('/intranet/conferences/{id}', 'destroy')->name('intranet.conferences.destroy');
+        Route::delete('/intranet/conferences/{id}', 'delete')->name('intranet.conferences.delete');
         Route::get('/intranet/conferences/{id}/dashboard', 'dashboard')->name('intranet.conferences.dashboard');
         Route::get('/intranet/conferences/{id}/qr-scan', 'qrScan')->name('intranet.conferences.qr-scan');
     });
