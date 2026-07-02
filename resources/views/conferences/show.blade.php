@@ -33,6 +33,10 @@
 
                 <h1>{{ $conference['title'] }}</h1>
 
+                <p class="badge" style="margin-top: 8px;">
+                    ${{ number_format($conference['price'], 0, ',', '.') }} por persona
+                </p>
+
                 @if (!empty($conference['description']))
                     <p class="hero__lead">{{ $conference['description'] }}</p>
                 @endif

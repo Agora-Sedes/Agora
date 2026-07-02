@@ -10,7 +10,14 @@
 <div class="content container section">
     <div class="form-container panel">
         <h1 class="page-title">Formulario de Inscripción</h1>
-        <form action="{{ route('conferences.register.step-3', [ 'id' => $conference_id ]) }}" method="POST">
+
+        <p class="muted" style="margin-bottom: 24px;">
+            {{ $amount }} {{ $amount === 1 ? 'entrada' : 'entradas' }} ×
+            ${{ number_format($conference->price, 0, ',', '.') }} =
+            <strong>${{ number_format($conference->price * $amount, 0, ',', '.') }}</strong>
+        </p>
+
+        <form action="{{ route('conferences.register.step-3', [ 'id' => $conference->id ]) }}" method="POST">
             @csrf
 
             <input type="hidden" name="payment_method" value="{{ $method }}">

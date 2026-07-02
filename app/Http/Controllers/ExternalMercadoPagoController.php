@@ -17,11 +17,7 @@ class ExternalMercadoPagoController extends Controller
 
         return view('external.mercado-pago.callback');
     }
-    /**
-     * Notificación server-to-server de Mercado Pago cuando cambia el estado de un pago.
-     * El webhook solo trae el ID; consultamos el detalle en la API y, si el pago fue
-     * aprobado, mandamos el mail de asistencia al comprador.
-     */
+
     public function successfulPaymentWebhook(Request $request)
     {
         Log::info('[MP webhook] >>> ENTRÓ al controller', [
@@ -32,7 +28,6 @@ class ExternalMercadoPagoController extends Controller
             'raw'     => $request->getContent(),
         ]);
 
-        // Solo nos interesan las notificaciones de pago.
         $type      = $request->input('type', $request->query('topic'));
         $paymentId = $request->input('data.id', $request->query('id'));
 
@@ -41,7 +36,6 @@ class ExternalMercadoPagoController extends Controller
         }
 
         try {
-            // Consultar el pago real en la API de MP para conocer su estado y el comprador
             $token = config('services.mercadopago.access_token');
             Log::info('[MP webhook] consultando pago en la API de MP', [
                 'paymentId'   => $paymentId,
@@ -57,9 +51,9 @@ class ExternalMercadoPagoController extends Controller
                 'payer'  => $payment->payer->email ?? null,
             ]);
 
-            // Mandar el mail de asistencia SOLO cuando el pago fue aprobado
             $aprobado    = $payment->status === 'approved';
             $tieneEmail  = ! empty($payment->payer->email);
+
             Log::info('[MP webhook] evaluando envío de mail', [
                 'aprobado'   => $aprobado,
                 'tieneEmail' => $tieneEmail,
@@ -67,9 +61,30 @@ class ExternalMercadoPagoController extends Controller
             ]);
 
             if ($aprobado && $tieneEmail) {
-                Log::info('[MP webhook] >>> ENVIANDO mail', ['to' => $payment->payer->email]);
+                $unitPrice = 12000;
+                $peopleCount = 1;
+
+                if (! empty($payment->external_reference)) {
+                    $ref = json_decode($payment->external_reference, true);
+                    if (is_array($ref)) {
+                        $unitPrice = $ref['unit_price'] ?? $unitPrice;
+                        $peopleCount = $ref['people_count'] ?? $peopleCount;
+                    }
+                }
+
+                Log::info('[MP webhook] >>> ENVIANDO mail', [
+                    'to' => $payment->payer->email,
+                    'unitPrice' => $unitPrice,
+                    'peopleCount' => $peopleCount,
+                ]);
+
                 Mail::to($payment->payer->email)
-                    ->send(new VerifyAssistanceMail((string) $payment->id));
+                    ->send(new VerifyAssistanceMail(
+                        token: (string) $payment->id,
+                        unitPrice: $unitPrice,
+                        peopleCount: $peopleCount,
+                    ));
+
                 Log::info('[MP webhook] <<< mail ENVIADO OK', ['to' => $payment->payer->email]);
             } else {
                 Log::info('[MP webhook] NO se envía mail (condición no cumplida)');
@@ -83,7 +98,6 @@ class ExternalMercadoPagoController extends Controller
             ]);
         }
 
-        // MP espera un 200 para no reintentar la notificación
         return response()->json(['received' => true], 200);
     }
 }
