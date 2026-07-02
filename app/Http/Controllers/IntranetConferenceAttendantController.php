@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AttendantCertificateMail;
 use App\Mail\VerifyAssistanceMail;
 use App\Mail\VerifyPaymentMail;
 use App\Models\Attendant;
@@ -116,6 +117,36 @@ class IntranetConferenceAttendantController extends Controller
         ]);
 
         return redirect()->route('intranet.conferences.attendants.list', ['id' => $conference->id]);
+    }
+
+    public function sendCertificate(int $id, int $attendantId) {
+        $conference = Conference::find($id);
+
+        if (is_null($conference)) {
+            return response('Conferencia no encontrada', 404);
+        }
+
+        $attendant = Attendant::where('conference_id', $conference->id)->find($attendantId);
+
+        if (is_null($attendant)) {
+            return response('Inscripto no encontrado', 404);
+        }
+
+        // Prohibido desde la UI
+        if ($attendant->is_draft) {
+            return response('El inscripto aún no pagó', 400);
+        }
+
+        // Prohibido desde la UI
+        if (! $attendant->was_present) {
+            return response('El inscripto pagó pero no vino', 400);
+        }
+
+        Mail::to($attendant->email)->send(new AttendantCertificateMail($conference, $attendant));
+
+        return redirect()
+            ->route('intranet.conferences.attendants.list', ['id' => $conference->id])
+            ->with('status', "Se envió un certificado de participación a {$attendant->email}.");
     }
 
     public function resendQr(int $id, int $attendantId) {

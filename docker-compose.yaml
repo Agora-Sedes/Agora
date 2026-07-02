@@ -13,6 +13,8 @@ services:
           condition: service_healthy
       mailpit:
           condition: service_started
+      pdf-converter:
+          condition: service_started
     ports:
       - "8000:8000"
       - "5173:5173"
@@ -21,6 +23,7 @@ services:
       # Store database in production
     networks:
       - app-network
+
   database:
     image: mariadb:lts-ubi
     environment:
@@ -34,12 +37,18 @@ services:
         timeout: 5s
         retries: 5
         start_period: 10s
-      
+
   mailpit:
     image: axllent/mailpit:v1.29
     # 1025 is automatically routed
     ports:
       - "8025:8025"
+    networks:
+      - app-network
+
+  pdf-converter:
+    image: ghcr.io/acsone/kwkhtmltopdf/0.12.6.1:1.1.0
+    # Port 8080 automatically routed
     networks:
       - app-network
 

@@ -15,6 +15,7 @@ use App\Http\Middleware\IntranetAuth;
 
 Route::pattern('id', '[0-9]+');
 Route::pattern('qid', '[0-9]+');
+Route::pattern('attendantId', '[0-9]+');
 Route::pattern('token', '[a-f0-9]{32}');
 
 //// Normal user flow
@@ -60,8 +61,10 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::post('/intranet/conferences/{id}/attendants/new', 'store')->name('intranet.conferences.attendants.store');
         Route::get('/intranet/conferences/{id}/attendants/{attendantId}/edit', 'edit')->name('intranet.conferences.attendants.edit');
         Route::put('/intranet/conferences/{id}/attendants/{attendantId}', 'update')->name('intranet.conferences.attendants.update');
-        Route::post('/intranet/conferences/{id}/attendants/{attendantId}/resend-qr', 'resendQr')->name('intranet.conferences.attendants.resend-qr');
         Route::delete('/intranet/conferences/{id}/attendants/{attendantId}', 'destroy')->name('intranet.conferences.attendants.destroy');
+
+        Route::post('/intranet/conferences/{id}/attendants/{attendantId}/resend-qr', 'resendQr')->name('intranet.conferences.attendants.resend-qr');
+        Route::post('/intranet/conferences/{id}/attendants/{attendantId}/send-certificate', 'sendCertificate')->name('intranet.conferences.attendants.send-certificate');
     });
 
     Route::controller(IntranetConferenceStreamController::class)->group(function () {
