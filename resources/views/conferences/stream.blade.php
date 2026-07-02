@@ -28,15 +28,17 @@
                     <p>Gracias por acompañarnos</p>
                 </div>
 
-                {{-- Aviso cuando la sesión fue reemplazada desde otro dispositivo --}}
-                <div class="stream-stage__overlay hidden" id="session-ended-overlay">
-                    <div class="stream-stage__overlay-icon" aria-hidden="true">⚠</div>
-                    <h2>Tu sesión fue cerrada</h2>
-                    <p>Se inició esta transmisión desde otro dispositivo. Solo se permite una sesión activa por inscripción.</p>
-                    <a href="{{ route('conferences.stream', ['id' => $conference['id'], 'token' => $streamToken]) }}" class="header-action" style="margin-top:16px;">
-                        Reanudar acá
-                    </a>
-                </div>
+                {{-- Aviso cuando la sesión fue reemplazada desde otro dispositivo (solo en la vista real del asistente, no en el preview del admin) --}}
+                @if ($streamToken)
+                    <div class="stream-stage__overlay hidden" id="session-ended-overlay">
+                        <div class="stream-stage__overlay-icon" aria-hidden="true">⚠</div>
+                        <h2>Tu sesión fue cerrada</h2>
+                        <p>Se inició esta transmisión desde otro dispositivo. Solo se permite una sesión activa por inscripción.</p>
+                        <a href="{{ route('conferences.stream', ['id' => $conference['id'], 'token' => $streamToken]) }}" class="header-action" style="margin-top:16px;">
+                            Reanudar acá
+                        </a>
+                    </div>
+                @endif
             @else
                 <div class="stream-stage__placeholder">
                     <p class="eyebrow"><span></span> Sin transmisión</p>
