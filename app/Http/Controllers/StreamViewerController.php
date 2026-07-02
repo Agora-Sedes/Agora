@@ -10,9 +10,6 @@ use Illuminate\Support\Str;
 
 class StreamViewerController extends Controller
 {
-    /** Nombre de la cookie que identifica al dispositivo dueño de la sesión. */
-    private const DEVICE_COOKIE = 'stream_session_token';
-
     /** Duración de la cookie del dispositivo, en minutos (1 día). */
     private const DEVICE_COOKIE_MINUTES = 60 * 24;
 
@@ -35,20 +32,23 @@ class StreamViewerController extends Controller
             return response('Tu pago todavía está pendiente. Una vez confirmado vas a poder acceder a la transmisión.', 403);
         }
 
-        $deviceToken = $request->cookie(self::DEVICE_COOKIE);
-        $session = StreamSession::where('attendant_id', $attendant->id)->first();
+        $deviceToken = $request->cookie($this->deviceCookieName($id));
+        $newToken = Str::random(40);
 
-        // Sin sesión previa: tomamos esta como la activa.
-        if (is_null($session)) {
-            $deviceToken = $this->openSession($attendant, $conference->id);
+        // Tomamos la sesión de forma atómica: si no existía la creamos con nuestro
+        // token; si ya existía, firstOrCreate la devuelve sin pisarla. Así dos
+        // pestañas simultáneas en el primer ingreso no violan el unique(attendant_id).
+        $session = StreamSession::firstOrCreate(
+            ['attendant_id' => $attendant->id],
+            ['conference_id' => $conference->id, 'session_token' => $newToken],
+        );
 
-            return $this->streamResponse($conference, $token, 'active', $deviceToken);
+        // La sesión es nuestra: la acabamos de crear, o es el mismo dispositivo.
+        if ($session->wasRecentlyCreated) {
+            return $this->streamResponse($conference, $token, 'active', $newToken);
         }
 
-        // Misma persona, mismo dispositivo: seguimos donde estábamos.
         if ($deviceToken && hash_equals($session->session_token, $deviceToken)) {
-            $session->update(['last_seen_at' => now()]);
-
             return $this->streamResponse($conference, $token, 'active', $deviceToken);
         }
 
@@ -74,7 +74,7 @@ class StreamViewerController extends Controller
 
         return redirect()
             ->route('conferences.stream', ['id' => $id, 'token' => $token])
-            ->withCookie(cookie(self::DEVICE_COOKIE, $deviceToken, self::DEVICE_COOKIE_MINUTES));
+            ->withCookie(cookie($this->deviceCookieName($id), $deviceToken, self::DEVICE_COOKIE_MINUTES));
     }
 
     public function checkSession(int $id, string $token, Request $request)
@@ -85,19 +85,13 @@ class StreamViewerController extends Controller
             return response()->json(['active' => false], 403);
         }
 
-        $deviceToken = $request->cookie(self::DEVICE_COOKIE);
+        $deviceToken = $request->cookie($this->deviceCookieName($id));
 
-        $session = StreamSession::where('attendant_id', $attendant->id)
+        $isActive = StreamSession::where('attendant_id', $attendant->id)
             ->where('session_token', $deviceToken)
-            ->first();
+            ->exists();
 
-        if (is_null($session)) {
-            return response()->json(['active' => false]);
-        }
-
-        $session->update(['last_seen_at' => now()]);
-
-        return response()->json(['active' => true]);
+        return response()->json(['active' => $isActive]);
     }
 
     /**
@@ -157,10 +151,15 @@ class StreamViewerController extends Controller
             'attendant_id' => $attendant->id,
             'conference_id' => $conferenceId,
             'session_token' => $deviceToken,
-            'last_seen_at' => now(),
         ]);
 
         return $deviceToken;
+    }
+
+    /** Nombre de la cookie del dispositivo, propio de cada conferencia. */
+    private function deviceCookieName(int $conferenceId): string
+    {
+        return 'stream_session_token_' . $conferenceId;
     }
 
     /**
@@ -176,7 +175,7 @@ class StreamViewerController extends Controller
         ]);
 
         if (! is_null($deviceToken)) {
-            $response->withCookie(cookie(self::DEVICE_COOKIE, $deviceToken, self::DEVICE_COOKIE_MINUTES));
+            $response->withCookie(cookie($this->deviceCookieName($conference->id), $deviceToken, self::DEVICE_COOKIE_MINUTES));
         }
 
         return $response;

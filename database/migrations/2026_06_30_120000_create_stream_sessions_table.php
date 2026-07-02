@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignId('conference_id')->constrained('conferences')->cascadeOnDelete();
             // Identifica al dispositivo/navegador dueño de la sesión activa.
             $table->string('session_token', 64);
-            $table->timestamp('last_seen_at')->nullable();
             $table->timestamps();
 
             // Una única sesión activa por asistente.
