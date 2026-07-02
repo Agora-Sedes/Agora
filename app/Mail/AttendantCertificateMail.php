@@ -30,13 +30,25 @@ class AttendantCertificateMail extends Mailable
     ) {
 
         $htmlContent = view('emails.attendant-certificate-mail', [
-
+            'attendant' => $attendant,
+            'conference' => $conference,
         ])->render();
 
         try {
-            $response = Http::timeout(120)->attach(
-                'file', $htmlContent, 'certificate.html'
-            )->post('http://pdf-converter:8080/pdf');
+            // $response = Http::timeout(120)->attach(
+            //     'file',
+            //     $htmlContent,
+            //     'certificate.html'
+            // )->post('http://pdf-converter:8080/pdf');
+            // )->post('http://pdf-converter:8080/pdf', ['option' => 'page --page-size A4 --orientation Landscape']);
+            // --margin-top 0 --margin-bottom 0 --margin-left 0 --margin-right 0
+            $response = Http::timeout(120)
+                ->attach('option', '--page-size')
+                ->attach('option', 'A4')
+                ->attach('option', '--orientation')
+                ->attach('option', 'Landscape')
+                ->attach('file', $htmlContent, 'certificate.html')
+                ->post('http://pdf-converter:8080/pdf');
         } catch (Exception $exn) {
             Log::error("Falla interna (API PDF): {$exn->getMessage()}");
             return;
@@ -48,7 +60,7 @@ class AttendantCertificateMail extends Mailable
         }
 
         $this->pdf = Attachment::fromData(
-            fn () => $response->body(),
+            fn() => $response->body(),
             'CertificadoAsistencia.pdf'
         )->withMime('application/pdf');
     }
