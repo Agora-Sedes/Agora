@@ -27,6 +27,18 @@
                     <h2>Transmisión finalizada</h2>
                     <p>Gracias por acompañarnos</p>
                 </div>
+
+                {{-- Aviso cuando la sesión fue reemplazada desde otro dispositivo (solo en la vista real del asistente, no en el preview del admin) --}}
+                @if ($streamToken)
+                    <div class="stream-stage__overlay hidden" id="session-ended-overlay">
+                        <div class="stream-stage__overlay-icon" aria-hidden="true">⚠</div>
+                        <h2>Tu sesión fue cerrada</h2>
+                        <p>Se inició esta transmisión desde otro dispositivo. Solo se permite una sesión activa por inscripción.</p>
+                        <a href="{{ route('conferences.stream', ['id' => $conference['id'], 'token' => $streamToken]) }}" class="header-action" style="margin-top:16px;">
+                            Reanudar acá
+                        </a>
+                    </div>
+                @endif
             @else
                 <div class="stream-stage__placeholder">
                     <p class="eyebrow"><span></span> Sin transmisión</p>
@@ -96,12 +108,35 @@
     </div>
 </section>
 
+{{-- Modal: ya hay una sesión activa en otro dispositivo --}}
+@if ($sessionState === 'conflict')
+    <div class="stream-modal" id="session-conflict-modal" role="dialog" aria-modal="true" aria-labelledby="conflict-title">
+        <div class="stream-modal__box">
+            <h2 id="conflict-title">Sesión activa en otro dispositivo</h2>
+            <p>Esta transmisión ya se está viendo desde otro dispositivo con tu inscripción. Si continuás acá, la otra sesión se cerrará.</p>
+            <div class="stream-modal__actions">
+                <a href="{{ route('conferences.show', ['id' => $conference['id']]) }}" class="stream-modal__btn stream-modal__btn--ghost">
+                    Cancelar
+                </a>
+                <form method="POST" action="{{ route('conferences.stream.session.replace', ['id' => $conference['id'], 'token' => $streamToken]) }}">
+                    @csrf
+                    <button type="submit" class="stream-modal__btn stream-modal__btn--primary">
+                        Ver acá y cerrar la otra
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
+
 @endsection
 
 @push('scripts')
     <script>
         window.__VIDEO_ID__ = @json($conference['youtube_id'] ?? null);
         window.__CONFERENCE_ID__ = {{ (int) $conference['id'] }};
+        window.__SESSION_STATE__ = @json($sessionState);
+        window.__SESSION_CHECK_URL__ = @json($streamToken ? route('api.conferences.stream.session.check', ['id' => $conference['id'], 'token' => $streamToken]) : null);
     </script>
     <script src="{{ url('js/stream.js') }}"></script>
     <script src="{{ url('js/questions.js') }}"></script>

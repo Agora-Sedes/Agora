@@ -272,3 +272,66 @@
     width: 80px;
   }
 }
+
+/* --- Modal de sesión única --- */
+.stream-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(8, 16, 32, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.stream-modal__box {
+  background-color: #fff;
+  color: var(--ink, #0c1a2e);
+  border-radius: 14px;
+  padding: 28px 26px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.stream-modal__box h2 {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+}
+
+.stream-modal__box p {
+  margin: 0 0 22px;
+  color: rgba(12, 26, 46, 0.72);
+  line-height: 1.45;
+}
+
+.stream-modal__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.stream-modal__btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.stream-modal__btn--ghost {
+  background-color: transparent;
+  color: rgba(12, 26, 46, 0.7);
+  border: 1px solid rgba(12, 26, 46, 0.2);
+}
+
+.stream-modal__btn--primary {
+  background-color: var(--yellow, #f0b429);
+  color: #0c1a2e;
+}

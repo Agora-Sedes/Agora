@@ -34,7 +34,10 @@ class VerifyAssistanceMail extends Mailable
 
         // Si el asistente se inscribió como virtual, incluimos el link a la conferencia.
         $this->isVirtual = $attendant->mode === 'online';
-        $this->conferenceUrl = route('conferences.stream', ['id' => $attendant->conference_id]);
+        $this->conferenceUrl = route('conferences.stream', [
+            'id' => $attendant->conference_id,
+            'token' => $token,
+        ]);
     }
 
     public function envelope(): Envelope
