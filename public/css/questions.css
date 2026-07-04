@@ -144,6 +144,9 @@
   padding: 0;
   display: grid;
   gap: 12px;
+  max-height: 720px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .question-empty {
@@ -269,6 +272,82 @@
 .btn--sm {
   padding: 4px 10px;
   font-size: 0.8rem;
+}
+
+/* --- Drag handle ------------------------------------------------------- */
+
+.question-drag-handle {
+  cursor: grab;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-muted);
+  user-select: none;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.question-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* --- Drag states ------------------------------------------------------- */
+
+.question--dragging {
+  opacity: 0.85;
+  transform: scale(1.04) rotate(0.4deg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  z-index: 100;
+  transition: none;
+  cursor: grabbing;
+}
+
+.question--drag-over {
+  transform: translateY(4px);
+  border-color: var(--blue) !important;
+  background-color: #f0f7ff;
+}
+
+/* --- Pinned question --------------------------------------------------- */
+
+.question--pinned {
+  border-left: 3px solid var(--blue);
+  background-color: #f8fbff;
+}
+
+.question--pinned .question-body {
+  font-weight: 500;
+}
+
+/* --- Pin button -------------------------------------------------------- */
+
+.btn--pin {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.btn--pin:hover:not(:disabled) {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.btn--pinned {
+  background-color: #e8f0fe;
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+/* --- Accent button ----------------------------------------------------- */
+
+.btn--accent {
+  background-color: var(--blue);
+  border: 1px solid var(--blue);
+  color: #fff;
+}
+
+.btn--accent:hover:not(:disabled) {
+  background-color: var(--blue-600);
 }
 
 /* --- Responsive -------------------------------------------------------- */

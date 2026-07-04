@@ -85,10 +85,13 @@ class IntranetConferenceStreamController extends Controller
             'body' => ['required', 'string', 'min:3', 'max:280'],
         ]);
 
+        $maxOrder = Question::where('conference_id', $id)->max('sort_order') ?? 0;
+
         $question = Question::create([
             'conference_id' => $id,
             'body' => trim($validated['body']),
             'status' => 'pending',
+            'sort_order' => $maxOrder + 1,
         ]);
 
         return response()->json($question->only(['id', 'body', 'status', 'created_at']), 201);
@@ -106,8 +109,8 @@ class IntranetConferenceStreamController extends Controller
 
         $questions = Question::query()
             ->where('conference_id', $id)
-            ->latest()
-            ->get(['id', 'body', 'status', 'created_at']);
+            ->orderByRaw('is_pinned DESC, sort_order ASC, created_at DESC')
+            ->get(['id', 'body', 'status', 'is_pinned', 'sort_order', 'created_at']);
 
         return response()->json($questions);
     }
@@ -129,6 +132,8 @@ class IntranetConferenceStreamController extends Controller
         $validated = $request->validate([
             'status' => ['nullable', 'in:pending,answered'],
             'body' => ['nullable', 'string', 'min:1', 'max:280'],
+            'is_pinned' => ['nullable', 'boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
         if (isset($validated['status'])) {
@@ -137,10 +142,16 @@ class IntranetConferenceStreamController extends Controller
         if (isset($validated['body'])) {
             $question->body = trim($validated['body']);
         }
+        if (isset($validated['is_pinned'])) {
+            $question->is_pinned = $validated['is_pinned'];
+        }
+        if (isset($validated['sort_order'])) {
+            $question->sort_order = $validated['sort_order'];
+        }
 
         $question->save();
 
-        return response()->json($question->only(['id', 'body', 'status', 'created_at']));
+        return response()->json($question->only(['id', 'body', 'status', 'is_pinned', 'sort_order', 'created_at']));
     }
 
     public function destroyQuestion(int $id, int $qid): JsonResponse
@@ -160,6 +171,29 @@ class IntranetConferenceStreamController extends Controller
         $question->delete();
 
         return response()->json([], 204);
+    }
+
+    public function reorderQuestions(Request $request, int $id): JsonResponse
+    {
+        $conference = Conference::find($id);
+
+        if (is_null($conference)) {
+            return response()->json(['error' => 'Conferencia no encontrada'], 404);
+        }
+
+        $validated = $request->validate([
+            'questions' => 'required|array',
+            'questions.*.id' => 'required|integer|exists:questions,id',
+            'questions.*.sort_order' => 'required|integer|min:0',
+        ]);
+
+        foreach ($validated['questions'] as $item) {
+            Question::where('conference_id', $id)
+                ->where('id', $item['id'])
+                ->update(['sort_order' => $item['sort_order']]);
+        }
+
+        return response()->json(['message' => 'Orden actualizado']);
     }
 
     protected function extractVideoId(string $url): ?string

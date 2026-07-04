@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['conference_id', 'body', 'status'])]
+#[Fillable(['conference_id', 'body', 'status', 'is_pinned', 'sort_order'])]
 class Question extends Model
 {
     use HasFactory;
@@ -15,5 +15,13 @@ class Question extends Model
     public function conference(): BelongsTo
     {
         return $this->belongsTo(Conference::class);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_pinned' => 'boolean',
+            'sort_order' => 'integer',
+        ];
     }
 }

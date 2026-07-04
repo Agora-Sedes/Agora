@@ -74,6 +74,7 @@ Route::middleware(IntranetAuth::class)->group(function () {
 
         // Admin questions API
         Route::get('/api/conferences/{id}/manage/questions', 'adminQuestions')->name('api.conferences.questions.admin');
+        Route::post('/api/conferences/{id}/manage/questions/reorder', 'reorderQuestions')->name('api.conferences.questions.reorder');
         Route::patch('/api/conferences/{id}/manage/questions/{qid}', 'updateQuestion')->name('api.conferences.questions.update');
         Route::delete('/api/conferences/{id}/manage/questions/{qid}', 'destroyQuestion')->name('api.conferences.questions.destroy');
     });

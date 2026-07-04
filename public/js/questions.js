@@ -55,7 +55,7 @@
     renderAdminQuestions();
   }
 
-  // --- Admin: update question status ---
+  // --- Admin: update question ---
   async function updateQuestion(qId, payload) {
     const data = await fetchJSON(apiUrl(`/${qId}`), {
       method: 'PATCH',
@@ -67,6 +67,15 @@
   // --- Admin: delete question ---
   async function deleteQuestion(qId) {
     await fetchJSON(apiUrl(`/${qId}`), { method: 'DELETE' });
+  }
+
+  // --- Admin: reorder questions ---
+  async function reorderQuestions(orderedIds) {
+    const payload = orderedIds.map((id, i) => ({ id, sort_order: i }));
+    await fetchJSON(apiUrl('/reorder'), {
+      method: 'POST',
+      body: JSON.stringify({ questions: payload }),
+    });
   }
 
   // --- Time formatting ---
@@ -137,6 +146,8 @@
 
   // ================= ADMIN =================
 
+  let dragSrcIndex = null;
+
   function renderAdminQuestions() {
     if (!adminPanel) return;
 
@@ -160,23 +171,30 @@
     if (!listEl) return;
 
     if (questions.length === 0) {
-      listEl.innerHTML = '<li class="question-empty">No hay preguntas aún.</li>';
+      listEl.innerHTML = '<li class="question-empty">No hay preguntas aun.</li>';
       return;
     }
 
-    listEl.innerHTML = questions.map(q => {
+    const prevScrollTop = listEl.scrollTop;
+
+    listEl.innerHTML = questions.map((q, i) => {
       const isAnswered = q.status === 'answered';
       const statusLabel = isAnswered ? 'Respondida' : 'Pendiente';
       const statusClass = isAnswered ? 'question-status--answered' : 'question-status--pending';
+      const pinnedClass = q.is_pinned ? 'question--pinned' : '';
       return `
-        <li class="question-admin-item ${statusClass}">
+        <li class="question-admin-item ${statusClass} ${pinnedClass}" draggable="true" data-index="${i}" data-id="${q.id}">
           <div class="question-admin-meta">
+            <span class="question-drag-handle" title="Arrastrar para reordenar">⠿</span>
             <span class="question-id">#${q.id}</span>
             <span class="question-status-badge ${statusClass}">${statusLabel}</span>
             <time class="question-time">${relativeTime(q.created_at)}</time>
           </div>
           <p class="question-body">${escapeHtml(q.body)}</p>
           <div class="question-admin-controls">
+            <button class="btn btn--sm btn--pin ${q.is_pinned ? 'btn--pinned' : ''}" data-action="pin" data-id="${q.id}" title="${q.is_pinned ? 'Desfijar pregunta' : 'Fijar pregunta'}">
+              ${q.is_pinned ? 'Fijada' : 'Fijar'}
+            </button>
             ${!isAnswered ? `<button class="btn btn--sm btn--accent" data-action="answer" data-id="${q.id}">Marcar respondida</button>` : ''}
             <button class="btn btn--sm btn--danger" data-action="delete" data-id="${q.id}">Eliminar</button>
           </div>
@@ -184,9 +202,78 @@
       `;
     }).join('');
 
+    listEl.querySelectorAll('.question-admin-item[draggable]').forEach(item => {
+      item.addEventListener('dragstart', handleDragStart);
+      item.addEventListener('dragover', handleDragOver);
+      item.addEventListener('dragenter', handleDragEnter);
+      item.addEventListener('dragleave', handleDragLeave);
+      item.addEventListener('drop', handleDrop);
+      item.addEventListener('dragend', handleDragEnd);
+    });
+
     listEl.querySelectorAll('[data-action]').forEach(btn => {
       btn.addEventListener('click', handleAdminAction);
     });
+
+    listEl.scrollTop = prevScrollTop;
+  }
+
+  function handleDragStart(e) {
+    dragSrcIndex = parseInt(e.currentTarget.dataset.index, 10);
+    e.currentTarget.classList.add('question--dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', e.currentTarget.dataset.index);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleDragEnter(e) {
+    e.currentTarget.classList.add('question--drag-over');
+  }
+
+  function handleDragLeave(e) {
+    e.currentTarget.classList.remove('question--drag-over');
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('question--drag-over');
+
+    const targetIndex = parseInt(e.currentTarget.dataset.index, 10);
+    if (dragSrcIndex === null || dragSrcIndex === targetIndex) {
+      dragSrcIndex = null;
+      return;
+    }
+
+    const listEl = adminPanel.querySelector('.questions-admin-list');
+    const items = listEl.querySelectorAll('.question-admin-item');
+    const srcItem = items[dragSrcIndex];
+    const tgtItem = items[targetIndex];
+
+    if (dragSrcIndex < targetIndex) {
+      tgtItem.insertAdjacentElement('afterend', srcItem);
+    } else {
+      tgtItem.insertAdjacentElement('beforebegin', srcItem);
+    }
+
+    const [moved] = questions.splice(dragSrcIndex, 1);
+    questions.splice(targetIndex, 0, moved);
+
+    listEl.querySelectorAll('.question-admin-item').forEach((el, i) => {
+      el.dataset.index = i;
+    });
+
+    dragSrcIndex = null;
+    reorderQuestions(questions.map(q => q.id));
+  }
+
+  function handleDragEnd(e) {
+    e.currentTarget.classList.remove('question--dragging');
+    document.querySelectorAll('.question--drag-over').forEach(el => el.classList.remove('question--drag-over'));
+    dragSrcIndex = null;
   }
 
   async function handleAdminAction(e) {
@@ -195,7 +282,7 @@
     const qId = parseInt(btn.dataset.id, 10);
 
     if (action === 'delete') {
-      if (!confirm('¿Eliminar la pregunta #' + qId + '?')) return;
+      if (!confirm('Eliminar la pregunta #' + qId + '?')) return;
     }
 
     btn.disabled = true;
@@ -205,6 +292,11 @@
         await updateQuestion(qId, { status: 'answered' });
       } else if (action === 'delete') {
         await deleteQuestion(qId);
+      } else if (action === 'pin') {
+        const q = questions.find(x => x.id === qId);
+        if (q) {
+          await updateQuestion(qId, { is_pinned: !q.is_pinned });
+        }
       }
       await fetchAllQuestions();
     } catch (err) {
@@ -243,7 +335,10 @@
 
   if (isAdmin) {
     fetchAllQuestions();
-    setInterval(fetchAllQuestions, POLL_MS);
+    setInterval(() => {
+      if (dragSrcIndex !== null) return;
+      fetchAllQuestions();
+    }, POLL_MS);
     setupAdminRefresh();
   } else {
     setupViewerForm();
