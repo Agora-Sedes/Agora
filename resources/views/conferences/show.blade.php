@@ -123,6 +123,8 @@
                 Asegurá tu lugar en la jornada.
                 <br>
                 La inscripción es paga y está sujeta a disponibilidad de cupos.
+                <br>
+                El costo por entrada es de ${{ number_format($conference['price'], 0, ',', '.') }}
             </p>
             <a
                 id="btn-inscription-{{ $conference['id'] }}"

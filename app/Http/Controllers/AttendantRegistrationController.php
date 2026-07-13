@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendant;
+use App\Models\Conference;
 use App\Mail\VerifyPaymentMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +16,10 @@ class AttendantRegistrationController extends Controller
 {
     public function amountAndPaymentMethodForm(int $id)
     {
+        $conference = Conference::findOrFail($id);
+
         return view('conferences.register.amount-and-payment-method', [
-            'conference_id' => $id,
+            'conference' => $conference,
         ]);
     }
 
@@ -26,10 +29,12 @@ class AttendantRegistrationController extends Controller
         /** @var 'cash'|'mp' $method */
         $method = $request->post('payment_method', 'cash');
 
+        $conference = Conference::findOrFail($id);
+
         return view('conferences.register.participants', [
             'amount' => $amount,
             'method' => $method,
-            'conference_id' => $id,
+            'conference' => $conference,
         ]);
     }
 
@@ -46,7 +51,8 @@ class AttendantRegistrationController extends Controller
             'payment_method' => 'required|in:cash,mp',
         ]);
 
-        $conferenceId = $id;
+        $conference = Conference::findOrFail($id);
+        $conferenceId = $conference->id;
         $isDraft = $data['payment_method'] === 'mp';
         // Referencia única de esta compra: agrupa a todos los inscriptos de este registro.
         $orderReference = (string) Str::uuid();
@@ -68,7 +74,7 @@ class AttendantRegistrationController extends Controller
         });
 
         if ($data['payment_method'] === 'mp') {
-            $initPoint = $this->createMercadoPagoPreference($orderReference, $data['participants']);
+            $initPoint = $this->createMercadoPagoPreference($orderReference, $data['participants'], $conference->price);
             return redirect()->away($initPoint);
         } // ^ early return
 
@@ -82,14 +88,13 @@ class AttendantRegistrationController extends Controller
         ]);
     }
 
-    private function createMercadoPagoPreference(string $orderReference, array $participants): string
+    private function createMercadoPagoPreference(string $orderReference, array $participants, float $unitPrice): string
     {
         MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
 
         $buyer = $participants[0];
 
         $client = new PreferenceClient();
-        // TODO: update hardcoded price and item name once DB pr is merged
         $preference = $client->create([
             // Referencia de la compra: el webhook la usa para ubicar a todo el grupo.
             'external_reference' => $orderReference,
@@ -97,7 +102,7 @@ class AttendantRegistrationController extends Controller
                 [
                     'title' => 'Entrada a la jornada',
                     'quantity' => count($participants),
-                    'unit_price' => 12000,
+                    'unit_price' => $unitPrice,
                     'currency_id' => 'ARS',
                 ],
             ],

@@ -6,11 +6,15 @@
 <div class="container section">
     <h2 class="page-title">Seleccionar conferencia</h2>
 
-    @php $conferences = [["name" => "Conferencia 1"], ["name" => "Conferencia 2"]]; @endphp
+    <p style="margin: 16px 0;">
+        <a href="{{ route('intranet.conferences.new') }}">Crear nueva jornada</a>
+    </p>
 
     <div class="link-stack" style="max-width: 560px;">
-        @foreach ($conferences as $conference)
-            <a href="{{ route('intranet.conferences.dashboard', ['id' => 1]) }}">{{ $conference['name'] }}</a>
+        @foreach (($conferences ?? []) as $conference)
+            <a href="{{ route('intranet.conferences.dashboard', ['id' => $conference->id]) }}">
+                {{ $conference->title }}
+            </a>
         @endforeach
     </div>
 </div>

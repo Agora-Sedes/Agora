@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Inscritos')
+@section('title', 'Inscriptos')
 
 @section('header_action')
     <a href="{{ route('intranet.conferences.dashboard', [ 'id' => $conference->id ]) }}" class="header-action">← Panel</a>
@@ -9,7 +9,7 @@
 @section('content')
 <div class="container section">
     <p class="eyebrow"><span></span> {{ $conference->title }}</p>
-    <h2 class="page-title" style="margin-top: 12px;">Inscritos</h2>
+    <h2 class="page-title" style="margin-top: 12px;">Inscriptos</h2>
 
     @if (session('status'))
         <div class="card" style="padding: 16px; margin-bottom: 16px; background: #e9f7ef;">

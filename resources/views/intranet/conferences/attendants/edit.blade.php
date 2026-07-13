@@ -37,7 +37,7 @@
             </div>
             <label class="form__radio" style="display: inline-flex; gap: 8px; align-items: center;">
                 <input type="checkbox" name="is_draft" value="1" {{ $attendant->is_draft ? 'checked' : '' }}>
-                Marcar como pendiente
+                Marcar como impago
             </label>
             <button type="submit" class="btn btn--primary btn--block">Guardar cambios</button>
         </form>
