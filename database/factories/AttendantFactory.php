@@ -24,6 +24,7 @@ class AttendantFactory extends Factory
             'full_name' => fake()->name(),
             'email' => fake()->safeEmail(),
             'phone_number' => fake()->phoneNumber(),
+            'mode' => fake()->randomElement(["irl", "online"]),
         ];
     }
 }

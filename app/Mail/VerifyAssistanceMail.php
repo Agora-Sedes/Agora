@@ -17,13 +17,18 @@ class VerifyAssistanceMail extends Mailable
 
     public readonly string $verificationPayload;
     public readonly string $qrCode;
+    public readonly bool $isVirtual;
+    public readonly string $conferenceUrl;
 
-    public function __construct(public readonly Attendant $attendant)
-    {
+    public function __construct(
+        public readonly Attendant $attendant
+    ) {
+        $token = md5($attendant->government_id);
+
         $this->verificationPayload = Crypt::encryptString(json_encode([
-            'attendant_id' => $this->attendant->id,
-            'payment_id' => $this->attendant->payment_id,
-            'conference_id' => $this->attendant->conference_id,
+            'userId' => $attendant->id,
+            'conferenceId' => $attendant->conference_id,
+            'paymentId' => $attendant->payment_id,
         ], JSON_UNESCAPED_UNICODE));
 
         $this->qrCode = base64_encode(
@@ -31,6 +36,13 @@ class VerifyAssistanceMail extends Mailable
                 ->size(250)
                 ->generate($this->verificationPayload)
         );
+
+        // Si el asistente se inscribió como virtual, incluimos el link a la conferencia.
+        $this->isVirtual = $attendant->mode === 'online';
+        $this->conferenceUrl = route('conferences.stream', [
+            'id' => $attendant->conference_id,
+            'token' => $token,
+        ]);
     }
 
     public function envelope(): Envelope
@@ -47,6 +59,8 @@ class VerifyAssistanceMail extends Mailable
             with: [
                 'qrCode' => $this->qrCode,
                 'verificationPayload' => $this->verificationPayload,
+                'isVirtual' => $this->isVirtual,
+                'conferenceUrl' => $this->conferenceUrl,
                 'moneyPaid' => 12000,
                 'peopleAmount' => 250,
                 'attendant' => $this->attendant,

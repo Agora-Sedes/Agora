@@ -37,6 +37,13 @@
                     <p class="hero__lead">{{ $conference['description'] }}</p>
                 @endif
 
+                @if (!empty($conference['youtube_id']))
+                    <div class="panel cta" style="margin-top: 24px;">
+                        <h3>Transmisión en vivo disponible</h3>
+                        <p>El acceso a la transmisión es personal: te llegó por correo el link para verla con tu inscripción.</p>
+                    </div>
+                @endif
+
                 <p class="badge">
                     {{ $talks->count() }} {{ $talks->count() === 1 ? 'charla' : 'charlas' }} en el itinerario
                 </p>

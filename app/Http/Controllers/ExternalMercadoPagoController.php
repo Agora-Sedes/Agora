@@ -14,18 +14,19 @@ class ExternalMercadoPagoController extends Controller
 {
     public function callback(Request $request)
     {
-        Log::info('Callback de Mercado Pago', $request->query());
+        Log::debug('Callback de Mercado Pago', $request->query());
 
         return view('external.mercado-pago.callback');
     }
     /**
      * Notificación server-to-server de Mercado Pago cuando cambia el estado de un pago.
      * El webhook solo trae el ID; consultamos el detalle en la API y, si el pago fue
-     * aprobado, mandamos el mail de asistencia al comprador.
+     * aprobado, confirmamos y mandamos el mail de asistencia a todos los inscriptos
+     * agrupados por el external_reference de la compra.
      */
     public function successfulPaymentWebhook(Request $request)
     {
-        Log::info('[MP webhook] >>> ENTRÓ al controller', [
+        Log::debug('[MP webhook] >>> ENTRÓ al controller', [
             'method'  => $request->method(),
             'url'     => $request->fullUrl(),
             'query'   => $request->query(),
@@ -44,7 +45,7 @@ class ExternalMercadoPagoController extends Controller
         try {
             // Consultar el pago real en la API de MP para conocer su estado y el comprador
             $token = config('services.mercadopago.access_token');
-            Log::info('[MP webhook] consultando pago en la API de MP', [
+            Log::debug('[MP webhook] consultando pago en la API de MP', [
                 'paymentId'   => $paymentId,
                 'token_seteado' => ! empty($token),
             ]);
@@ -52,60 +53,45 @@ class ExternalMercadoPagoController extends Controller
             MercadoPagoConfig::setAccessToken($token);
             $payment = (new PaymentClient())->get($paymentId);
 
-            Log::info('[MP webhook] pago obtenido', [
+            Log::debug('[MP webhook] pago obtenido', [
                 'id'     => $payment->id,
                 'status' => $payment->status,
                 'payer'  => $payment->payer->email ?? null,
                 'external_reference' => $payment->external_reference ?? null,
             ]);
 
-            // Mandar el mail de asistencia SOLO cuando el pago fue aprobado
-            $aprobado    = $payment->status === 'approved';
-            $tieneEmail  = ! empty($payment->payer->email);
-            Log::info('[MP webhook] evaluando envío de mail', [
-                'aprobado'   => $aprobado,
-                'tieneEmail' => $tieneEmail,
-                'email'      => $payment->payer->email ?? null,
+            // Procesar el pago SOLO cuando fue aprobado.
+            $aprobado = $payment->status === 'approved';
+
+            // external_reference agrupa a TODOS los inscriptos de esta compra.
+            // Un pagador puede comprar varias entradas (para sí y para otros),
+            // así que confirmamos y mandamos el mail a cada uno del grupo.
+            $orderReference = $payment->external_reference ?? null;
+
+            $attendants = $orderReference
+                ? Attendant::where('order_reference', $orderReference)->get()
+                : collect();
+
+            Log::debug('[MP webhook] evaluando envío de mails', [
+                'aprobado'       => $aprobado,
+                'orderReference' => $orderReference,
+                'inscriptos'     => $attendants->count(),
             ]);
 
-            if ($aprobado && $tieneEmail) {
-                $batchId = $payment->external_reference ?? null;
-                if ($batchId) {
-                    Attendant::query()
-                        ->where('registration_batch_id', $batchId)
-                        ->update([
-                            'payment_id' => (string) $payment->id,
-                            'is_draft' => false,
-                        ]);
+            if ($aprobado && $attendants->isNotEmpty()) {
+                foreach ($attendants as $attendant) {
+                    $attendant->update([
+                        'is_draft' => false,
+                        'payment_id' => (string) $payment->id,
+                    ]);
 
-                    $attendants = Attendant::query()
-                        ->where('registration_batch_id', $batchId)
-                        ->orderBy('id')
-                        ->get();
-
-                    foreach ($attendants as $attendant) {
-                        Mail::to($attendant->email)
-                            ->send(new VerifyAssistanceMail($attendant));
-                    }
-                } else {
-                    Mail::to($payment->payer->email)
-                        ->send(new VerifyAssistanceMail(new Attendant([
-                            'conference_id' => 0,
-                            'payment_id' => (string) $payment->id,
-                            'registration_batch_id' => null,
-                            'is_draft' => false,
-                            'was_present' => false,
-                            'government_id' => '',
-                            'full_name' => $payment->payer->email,
-                            'email' => $payment->payer->email,
-                            'phone_number' => '',
-                        ])));
+                    Log::debug('[MP webhook] >>> ENVIANDO mail', ['to' => $attendant->email]);
+                    Mail::to($attendant->email)
+                        ->send(new VerifyAssistanceMail($attendant));
+                    Log::debug('[MP webhook] <<< mail ENVIADO OK', ['to' => $attendant->email]);
                 }
-
-                Log::info('[MP webhook] >>> ENVIANDO mail', ['to' => $payment->payer->email]);
-                Log::info('[MP webhook] <<< mail ENVIADO OK', ['to' => $payment->payer->email]);
             } else {
-                Log::info('[MP webhook] NO se envía mail (condición no cumplida)');
+                Log::debug('[MP webhook] NO se envían mails (condición no cumplida)');
             }
         } catch (\Throwable $e) {
             Log::error('[MP webhook] ERROR procesando el webhook', [

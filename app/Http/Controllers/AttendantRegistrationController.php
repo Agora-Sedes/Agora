@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\VerifyPaymentMail;
 use App\Models\Attendant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use MercadoPago\Client\Preference\PreferenceClient;
@@ -45,32 +46,43 @@ class AttendantRegistrationController extends Controller
             'payment_method' => 'required|in:cash,mp',
         ]);
 
+        $conferenceId = $id;
+        $isDraft = $data['payment_method'] === 'mp';
+        // Referencia única de esta compra: agrupa a todos los inscriptos de este registro.
+        $orderReference = (string) Str::uuid();
+
+        $attendants = DB::transaction(function () use ($conferenceId, $data, $isDraft, $orderReference) {
+            $created = [];
+
+            foreach ($data['participants'] as $participant) {
+                $created[] = Attendant::create([
+                    'conference_id' => $conferenceId,
+                    'order_reference' => $orderReference,
+                    'mode' => $participant['mode'],
+                    'is_draft' => $isDraft,
+                    'was_present' => false,
+                    'government_id' => $participant['dni'],
+                    'full_name' => trim($participant['name'] . ' ' . $participant['lastname']),
+                    'email' => $participant['email'],
+                    'phone_number' => $participant['phone'],
+                ]);
+            }
+
+            return $created;
+        });
+
         if ($data['payment_method'] === 'mp') {
-            $batchId = (string) Str::uuid();
-            $this->storePendingAttendants($id, $batchId, $data['participants']);
-            $initPoint = $this->createMercadoPagoPreference($data['participants'], $batchId);
+            $initPoint = $this->createMercadoPagoPreference($orderReference, $data['participants']);
             return redirect()->away($initPoint);
         } // ^ early return
 
-        foreach ($data['participants'] as $participant) {
-            $attendant = Attendant::query()->create([
-                'conference_id' => $id,
-                'payment_id' => null,
-                'registration_batch_id' => null,
-                'is_draft' => false,
-                'was_present' => false,
-                'government_id' => $participant['dni'],
-                'full_name' => trim($participant['name'] . ' ' . $participant['lastname']),
-                'email' => $participant['email'],
-                'phone_number' => $participant['phone'],
-            ]);
-
+        // Pago en efectivo: la inscripción queda confirmada en el momento.
+        // Registramos el pago (necesario para el QR de verificación) y mandamos el mail.
+        foreach ($attendants as $attendant) {
             $attendant->payment_id = (string) $attendant->id;
             $attendant->save();
 
-            if ($attendant) {
-                Mail::to($participant['email'])->send(new VerifyPaymentMail($attendant));
-            }
+            Mail::to($attendant->email)->send(new VerifyPaymentMail($attendant));
         }
 
         return view('conferences.register.success', [
@@ -78,7 +90,7 @@ class AttendantRegistrationController extends Controller
         ]);
     }
 
-    private function createMercadoPagoPreference(array $participants, string $batchId): string
+    private function createMercadoPagoPreference(string $orderReference, array $participants): string
     {
         MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
 
@@ -87,6 +99,8 @@ class AttendantRegistrationController extends Controller
         $client = new PreferenceClient();
         // TODO: update hardcoded price and item name once DB pr is merged
         $preference = $client->create([
+            // Referencia de la compra: el webhook la usa para ubicar a todo el grupo.
+            'external_reference' => $orderReference,
             'items' => [
                 [
                     'title' => 'Entrada a la jornada',
@@ -109,27 +123,9 @@ class AttendantRegistrationController extends Controller
                 'pending' => route('external.mercado-pago.callback'),
             ],
             'notification_url' => config('services.mercadopago.notification_url'),
-            'external_reference' => $batchId,
             // Texto que ve el comprador en el resumen de su tarjeta (usa APP_NAME=Agora)
             'statement_descriptor' => config('app.name'),
         ]);
         return $preference->init_point;
-    }
-
-    private function storePendingAttendants(int $conferenceId, string $batchId, array $participants): void
-    {
-        foreach ($participants as $participant) {
-            Attendant::query()->create([
-                'conference_id' => $conferenceId,
-                'payment_id' => null,
-                'registration_batch_id' => $batchId,
-                'is_draft' => true,
-                'was_present' => false,
-                'government_id' => $participant['dni'],
-                'full_name' => trim($participant['name'] . ' ' . $participant['lastname']),
-                'email' => $participant['email'],
-                'phone_number' => $participant['phone'],
-            ]);
-        }
     }
 }

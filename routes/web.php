@@ -9,14 +9,28 @@ use App\Http\Controllers\ConferenceController;
 use App\Http\Controllers\ExternalMercadoPagoController;
 use App\Http\Controllers\IntranetConferenceAttendantController;
 use App\Http\Controllers\IntranetConferenceController;
+use App\Http\Controllers\IntranetConferenceStreamController;
+use App\Http\Controllers\StreamViewerController;
 use App\Http\Middleware\IntranetAuth;
 
 Route::pattern('id', '[0-9]+');
+Route::pattern('qid', '[0-9]+');
+Route::pattern('attendantId', '[0-9]+');
+Route::pattern('token', '[a-f0-9]{32}');
 
 //// Normal user flow
 
 Route::get('/', [ConferenceController::class, 'list'])->name('conferences.list');
 Route::get('/conferences/{id}', [ConferenceController::class, 'show'])->name('conferences.show');
+Route::get('/conferences/{id}/stream/{token}', [StreamViewerController::class, 'show'])->name('conferences.stream');
+Route::post('/conferences/{id}/stream/{token}/session/replace', [StreamViewerController::class, 'replaceSession'])->name('conferences.stream.session.replace');
+Route::get('/api/conferences/{id}/stream/{token}/session/check', [StreamViewerController::class, 'checkSession'])->name('api.conferences.stream.session.check');
+Route::get('/api/conferences/{id}/manage/stream', [StreamViewerController::class, 'apiVideoId'])->name('api.conferences.stream');
+
+// Questions API (public)
+Route::post('/api/conferences/{id}/manage/questions', [IntranetConferenceStreamController::class, 'storeQuestion'])
+    ->middleware('throttle:10,1')
+    ->name('api.conferences.questions.store');
 
 Route::controller(AttendantRegistrationController::class)->group(function () {
     Route::get('/conferences/{id}/register/step-1', 'amountAndPaymentMethodForm')->name('conferences.register.step-1');
@@ -44,10 +58,37 @@ Route::middleware(IntranetAuth::class)->group(function () {
 
     Route::controller(IntranetConferenceAttendantController::class)->group(function () {
         /// Conference attendant management
-        Route::view('/intranet/conferences/{id}/attendants/list', 'list')->name('intranet.conferences.attendants.list');
-        Route::view('/intranet/conferences/{id}/attendants/new', 'new')->name('intranet.conferences.attendants.new');
-        Route::post('/intranet/conferences/{id}/attendants/new', 'store');
+        Route::get('/intranet/conferences/{id}/attendants/list', 'list')->name('intranet.conferences.attendants.list');
+        Route::get('/intranet/conferences/{id}/attendants/new', 'new')->name('intranet.conferences.attendants.new');
+        Route::post('/intranet/conferences/{id}/attendants/new', 'store')->name('intranet.conferences.attendants.store');
+        Route::get('/intranet/conferences/{id}/attendants/{attendantId}/edit', 'edit')->name('intranet.conferences.attendants.edit');
+        Route::put('/intranet/conferences/{id}/attendants/{attendantId}', 'update')->name('intranet.conferences.attendants.update');
+        Route::delete('/intranet/conferences/{id}/attendants/{attendantId}', 'destroy')->name('intranet.conferences.attendants.destroy');
+
+        Route::post('/intranet/conferences/{id}/attendants/{attendantId}/resend-qr', 'resendQr')->name('intranet.conferences.attendants.resend-qr');
+        Route::post('/intranet/conferences/{id}/attendants/{attendantId}/send-certificate', 'sendCertificate')->name('intranet.conferences.attendants.send-certificate');
     });
+
+    Route::controller(IntranetConferenceStreamController::class)->group(function () {
+        Route::get('/intranet/conferences/{id}/stream', 'edit')->name('intranet.conferences.stream.edit');
+        Route::post('/intranet/conferences/{id}/stream', 'update')->name('intranet.conferences.stream.update');
+        Route::post('/intranet/conferences/{id}/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
+    });
+
+    Route::controller(IntranetConferenceStreamController::class)->group(function () {
+        // Admin stream management
+        Route::get('/intranet/conferences/{id}/manage', 'edit')->name('intranet.conferences.manage');
+        Route::post('/api/conferences/{id}/manage/stream', 'update')->name('intranet.conferences.stream.update');
+        Route::post('/api/conferences/{id}/manage/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
+
+        // Admin questions API
+        Route::get('/api/conferences/{id}/manage/questions', 'adminQuestions')->name('api.conferences.questions.admin');
+        Route::patch('/api/conferences/{id}/manage/questions/{qid}', 'updateQuestion')->name('api.conferences.questions.update');
+        Route::delete('/api/conferences/{id}/manage/questions/{qid}', 'destroyQuestion')->name('api.conferences.questions.destroy');
+    });
+
+    // Previsualización del stream para el admin (sin gating de sesión única).
+    Route::get('/intranet/conferences/{id}/stream/preview', [StreamViewerController::class, 'preview'])->name('intranet.conferences.stream.preview');
 });
 
 Route::controller(ExternalMercadoPagoController::class)->group(function () {
