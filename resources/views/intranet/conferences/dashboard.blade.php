@@ -12,14 +12,13 @@
 @section('content')
 <div class="container section">
     <p class="eyebrow"><span></span> Intranet</p>
-    <h2 class="page-title" style="margin-top: 12px;">Panel de administración</h2>
-    <p class="muted" style="margin-top: 8px;">{{ $conference->title }}</p>
-    <p class="badge" style="margin-top: 8px;">Precio: ${{ number_format($conference->price, 0, ',', '.') }}</p>
+    <h2 class="page-title" style="margin-top: 12px; margin-bottom: 0;">Panel de administración</h2>
+    <p class="muted" style="margin-top: 8px; margin-bottom: 1em;">{{ $conference->title }}</p>
 
     <div class="link-stack" style="max-width: 560px;">
         <a href="{{ route('intranet.conferences.edit', [ 'id' => $conference->id ]) }}">Editar jornada</a>
         <a href="{{ route('intranet.conferences.qr-scan', [ 'id' => $conference->id ]) }}">Escanear QR</a>
-        <a href="{{ route('intranet.conferences.attendants.list', [ 'id' => $conference->id ]) }}">Inscritos</a>
+        <a href="{{ route('intranet.conferences.attendants.list', [ 'id' => $conference->id ]) }}">Inscriptos</a>
         <a href="{{ route('intranet.conferences.attendants.new', [ 'id' => $conference->id ]) }}">Agregar inscripto de último momento</a>
         <a href="{{ route('intranet.conferences.manage', [ 'id' => $conference->id ]) }}">Administrar transmisión y preguntas</a>
     </div>

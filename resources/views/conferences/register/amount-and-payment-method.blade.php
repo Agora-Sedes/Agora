@@ -7,10 +7,6 @@
     <div class="panel">
         <h1 class="page-title">¿Cuántas entradas?</h1>
 
-        <p class="muted" style="margin-bottom: 18px;">
-            Valor por entrada: ${{ number_format($conference->price, 0, ',', '.') }}
-        </p>
-
         <form action="{{ route('conferences.register.step-2', [ 'id' => $conference->id ]) }}" method="POST" class="stack">
             @csrf
             <div class="field">
@@ -39,7 +35,7 @@
             </div>
 
             <p class="muted" style="text-align: center; font-size: 1.25rem;">
-                Total: ${{ number_format($conference->price, 0, ',', '.') }}
+                Total:
                 <span id="total-display"></span>
             </p>
 
@@ -56,7 +52,7 @@
 
     const updateTotal = () => {
         const amount = parseInt(select.value, 10);
-        totalDisplay.textContent = `(${amount} × $${price.toLocaleString('es-AR')})`;
+        totalDisplay.textContent = `$${(amount*price).toLocaleString('es-AR')} (${amount} × $${price.toLocaleString('es-AR')})`;
     };
 
     select.addEventListener('change', updateTotal);

@@ -60,7 +60,7 @@
                 @endif
 
                 <div class="field">
-                    <label for="title">Título</label>
+                    <label for="title">Título de la jornada</label>
                     <input type="text" id="title" name="title" class="input" value="{{ old('title', $conference->title) }}" required>
                     @error('title') <div class="form-error">{{ $message }}</div> @enderror
                 </div>
@@ -103,7 +103,7 @@
                     <div class="talk-item__body" style="display: block; padding: 20px;">
                         <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
                             <div class="field">
-                                <label>Título de la charla</label>
+                                <label>Título de la charla N° {{ $index+1 }}</label>
                                 <input type="text" class="input" name="talks[{{ $index }}][title]" value="{{ $talk['title'] ?? '' }}" form="conference-form" required>
                             </div>
                             <div class="field">
@@ -137,6 +137,7 @@
                             <button type="button" class="header-action" data-remove-talk>Quitar charla</button>
                         </div>
                     </div>
+                    <hr/>
                 </div>
             @empty
             @endforelse
@@ -173,7 +174,7 @@
                     </div>
 
                     <div class="field" style="margin-top: 16px;">
-                        <label>Biografía del speaker</label>
+                        <label>Biografía del invitado</label>
                         <textarea class="input" rows="4" data-talk-field="speaker_background" required></textarea>
                     </div>
 

@@ -62,8 +62,6 @@
                         <h2>{{ $conference['title'] }}</h2>
 
                         <p class="conf-card__desc">{{ $conference['description'] }}</p>
-
-                        <span class="badge">${{ number_format($conference['price'], 0, ',', '.') }}</span>
                     </a>
                 @endforeach
             </div>

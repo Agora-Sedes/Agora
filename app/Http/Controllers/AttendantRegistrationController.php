@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendant;
+use App\Models\Conference;
 use App\Mail\VerifyPaymentMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
