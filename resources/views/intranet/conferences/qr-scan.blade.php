@@ -110,9 +110,10 @@
         </section>
 
         <section class="qr-card qr-stage qr-hidden" id="verifyStage">
-            <div class="qr-badge" style="background: #ecfeff; color: #0f766e;">Verificá los datos</div>
+            <div class="qr-badge" id="verifyBadge" style="background: #ecfeff; color: #0f766e;">Verificá los datos</div>
             <h3 class="qr-stage__title">Persona detectada</h3>
-            <p>Confirmá que la persona pertenece a esta conferencia antes de registrar la asistencia.</p>
+            <p id="verifyDescription">Confirmá que la persona pertenece a esta conferencia antes de registrar la asistencia.</p>
+            <p class="qr-status" id="verifyError" style="color: #dc2626; font-weight: 600; display: none;"></p>
 
             <div class="qr-person" id="attendantData"></div>
 
@@ -153,6 +154,9 @@
     const confirmBtn = document.getElementById('confirmScanBtn');
     const cancelBtn = document.getElementById('cancelScanBtn');
     const backToScanBtn = document.getElementById('backToScanBtn');
+    const verifyError = document.getElementById('verifyError');
+    const verifyBadge = document.getElementById('verifyBadge');
+    const verifyDescription = document.getElementById('verifyDescription');
     const manualForm = document.getElementById('manualScanForm');
     const manualCode = document.getElementById('manualCode');
     let activeAttendant = null;
@@ -209,7 +213,29 @@
         }
 
         activeAttendant = data.attendant;
+        activeAttendant.belongs_to_conference = data.belongs_to_conference;
         renderAttendant(activeAttendant);
+
+        if (!data.belongs_to_conference) {
+            verifyBadge.style.background = '#fef2f2';
+            verifyBadge.style.color = '#991b1b';
+            verifyBadge.textContent = 'Error';
+            verifyDescription.textContent = 'Esta persona no pertenece a esta conferencia.';
+            verifyError.textContent = 'No se puede registrar la asistencia.';
+            verifyError.style.display = 'block';
+            confirmBtn.style.display = 'none';
+            cancelBtn.textContent = 'Volver a escanear';
+        } else {
+            verifyBadge.style.background = '#ecfeff';
+            verifyBadge.style.color = '#0f766e';
+            verifyBadge.textContent = 'Verificá los datos';
+            verifyDescription.textContent = 'Confirmá que la persona pertenece a esta conferencia antes de registrar la asistencia.';
+            verifyError.style.display = 'none';
+            confirmBtn.style.display = '';
+            cancelBtn.textContent = 'Cancelar inscripción';
+            confirmBtn.disabled = false;
+        }
+
         showOnly(verifyStage);
     }
 
@@ -336,9 +362,21 @@
         }
     });
 
+    function resetVerifyStage() {
+        verifyBadge.style.background = '#ecfeff';
+        verifyBadge.style.color = '#0f766e';
+        verifyBadge.textContent = 'Verificá los datos';
+        verifyDescription.textContent = 'Confirmá que la persona pertenece a esta conferencia antes de registrar la asistencia.';
+        verifyError.style.display = 'none';
+        confirmBtn.style.display = '';
+        confirmBtn.disabled = false;
+        cancelBtn.textContent = 'Cancelar inscripción';
+    }
+
     cancelBtn.addEventListener('click', async () => {
         activeAttendant = null;
         manualCode.value = '';
+        resetVerifyStage();
         showOnly(scanStage);
         scanStatus.textContent = 'Vuelve a escanear cuando quieras.';
         await startScanner();
@@ -349,6 +387,7 @@
     backToScanBtn.addEventListener('click', async () => {
         activeAttendant = null;
         manualCode.value = '';
+        resetVerifyStage();
         showOnly(scanStage);
         scanStatus.textContent = 'Esperando permiso de cámara...';
         await startScanner();
