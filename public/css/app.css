@@ -176,6 +176,7 @@ main {
 .header-action {
   display: inline-flex;
   align-items: center;
+  background-color: var(--navy-700);
   gap: 8px;
   padding: 8px 16px;
   border-radius: 999px;
@@ -183,14 +184,14 @@ main {
   color: var(--text-on-dark);
   font-size: 0.9rem;
   font-weight: 600;
-  background: transparent;
+  text-decoration: none;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .header-action:hover {
   color: var(--text-on-dark);
-  background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.45);
+  opacity: .8;
 }
 
 /* --- Footer ------------------------------------------------------------ */

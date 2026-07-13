@@ -24,6 +24,7 @@ class ConferenceFactory extends Factory
             'description' => fake()->realText(100),
             'starts_at' => fake()->dateTime($ends_at),
             'ends_at' => $ends_at,
+            'price' => fake()->randomFloat(0, 0, 100000),
         ];
     }
 }
