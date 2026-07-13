@@ -61,8 +61,11 @@ class IntranetConferenceController extends Controller
             ], 404);
         }
 
+        $belongsToConference = $attendant->conference_id === $id;
+
         return response()->json([
             'found' => true,
+            'belongs_to_conference' => $belongsToConference,
             'attendant' => [
                 'id' => $attendant->id,
                 'full_name' => $attendant->full_name,
