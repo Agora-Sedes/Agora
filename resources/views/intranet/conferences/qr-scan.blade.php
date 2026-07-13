@@ -321,6 +321,7 @@
         }
 
         activeAttendant = data.attendant;
+        activeAttendant.belongs_to_conference = data.belongs_to_conference;
         activeConference = data.conference;
         activeIsPaid = data.is_paid;
         activeIsEventDay = data.is_event_day;
