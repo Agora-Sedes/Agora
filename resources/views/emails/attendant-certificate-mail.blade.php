@@ -14,6 +14,21 @@
             box-sizing: border-box;
         }
 
+        #qr-code {
+            float: right;
+            margin: 1em;
+            margin-right: 5em;
+        }
+
+        .spacing {
+            padding: 0.5em;
+        }
+
+        .big-spacing {
+            margin-top: 5em;
+            height: 4em;
+        }
+
         /* ===== PAGE ===== */
         @page {
             size: A4 landscape;
@@ -22,7 +37,6 @@
 
         /* ===== BODY (screen) ===== */
         body {
-            background: #e6e9ef;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -34,13 +48,10 @@
         /* ===== CERTIFICATE: fixed size ===== */
         .certificate {
             position: relative;
-            width: 297mm;
-            height: 210mm;
             background: #fefcf6;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
             border-radius: 2px;
-            /* Padding defines the offset for the inner frame */
-            padding: 8mm 14mm;
+            width: 380mm;
+            height: 220mm;
         }
 
         /* ===== INNER FRAME: absolutely positioned to fill the padded area ===== */
@@ -101,26 +112,17 @@
         .corner-inner-bl { bottom: 6mm; left: 8mm; border-bottom-width: 2px; border-left-width: 2px; }
         .corner-inner-br { bottom: 6mm; right: 8mm; border-bottom-width: 2px; border-right-width: 2px; }
 
-        /* ===== CONTENT TABLE: fills the frame and centers everything ===== */
-        .content-table {
-            display: table;
+        .content {
             width: 100%;
             height: 100%;
             /* table will fill the entire .border-frame */
-            position: relative;
+            position: absolute;
             z-index: 1;  /* above the ::before border */
-        }
-
-        .content-cell {
-            display: table-cell;
-            vertical-align: middle;
-            text-align: center;
-            padding: 2mm 0;
         }
 
         /* ===== TYPOGRAPHY ===== */
         .title {
-            font-size: 30px;
+            font-size: 30pt;
             font-weight: 700;
             color: #1a2a4a;
             letter-spacing: 3px;
@@ -130,16 +132,22 @@
             border-bottom: 2px solid #d4b87a;
             padding-bottom: 1.5mm;
             display: inline-block;
-            padding-left: 14px;
-            padding-right: 14px;
+            text-align: center;
+            width: 18em;
+        }
+
+        .title-container {
+            padding-left: 20em;
+            padding-right: 20em;
         }
 
         .body-text {
-            font-size: 18px;
+            font-size: 16pt;
             line-height: 2.1;
             color: #1e2a3a;
-            max-width: 88%;
-            margin: 0 auto 3mm auto;
+            max-width: 80%;
+            margin-left: auto;
+            margin-right: auto;
             font-family: 'Georgia', 'Times New Roman', serif;
             text-align: justify;
         }
@@ -160,7 +168,8 @@
             text-transform: uppercase;
             border-top: 1.5px solid #d4b87a;
             padding-top: 2.5mm;
-            width: 60%;
+            text-align: center;
+            width: 62%;
             margin-left: auto;
             margin-right: auto;
         }
@@ -173,6 +182,7 @@
             letter-spacing: 2px;
             margin-top: 1mm;
             text-transform: none;
+            text-align: center;
         }
 
         a {
@@ -191,8 +201,6 @@
             }
 
             .certificate {
-                width: 297mm;
-                height: 210mm;
                 box-shadow: none;
                 border-radius: 0;
                 padding: 8mm 14mm;
@@ -239,20 +247,6 @@
             .corner-inner-bl { bottom: 5mm; left: 7mm; }
             .corner-inner-br { bottom: 5mm; right: 7mm; }
 
-            .title {
-                font-size: 26px;
-                letter-spacing: 2px;
-            }
-            .body-text {
-                font-size: 16.5px;
-                line-height: 2;
-                max-width: 92%;
-            }
-            .institution-footer {
-                font-size: 13px;
-                width: 65%;
-            }
-
             /* Force colour printing */
             .corner,
             .corner-inner,
@@ -263,71 +257,6 @@
             .institution-footer {
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
-            }
-        }
-
-        /* ===== RESPONSIVE (screen only) ===== */
-        @media screen and (max-width: 900px) {
-            .certificate {
-                width: 100%;
-                height: auto;
-                min-height: 210mm;
-                padding: 5mm;
-            }
-            .border-frame {
-                position: relative;
-                top: auto;
-                left: auto;
-                right: auto;
-                bottom: auto;
-                width: 100%;
-                min-height: calc(100% - 10mm);
-                padding: 4mm 5mm;
-                border-width: 2px;
-                display: flex;
-                flex-direction: column;
-            }
-            .border-frame::before {
-                top: 3mm;
-                left: 4mm;
-                right: 4mm;
-                bottom: 3mm;
-            }
-            .content-table {
-                display: flex;
-                flex: 1;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-            }
-            .content-cell {
-                display: block;
-                width: 100%;
-            }
-            .body-text {
-                font-size: 15px;
-                max-width: 98%;
-                line-height: 1.8;
-            }
-            .title {
-                font-size: 22px;
-            }
-            .corner {
-                width: 12px;
-                height: 12px;
-            }
-            .corner-tl,
-            .corner-tr,
-            .corner-bl,
-            .corner-br {
-                border-width: 2px;
-            }
-            .corner-inner {
-                display: none;
-            }
-            .institution-footer {
-                width: 85%;
-                font-size: 12px;
             }
         }
     </style>
@@ -352,37 +281,48 @@
             <span class="corner-inner corner-inner-bl"></span>
             <span class="corner-inner corner-inner-br"></span>
 
-            <!-- Table for centering -->
-            <div class="content-table">
-                <div class="content-cell">
+            <div class="content">
+                <div class="big-spacing"></div>
 
+                <div class="title-container">
                     <h1 class="title">Certificado de Asistencia</h1>
-
-                    <p class="body-text">
-                        Se deja constancia para ser presentada a la autoridad que corresponda que
-                        <span class="highlight">{{ $attendant->name }}</span>,
-                        N° DNI <span class="highlight">{{ $attendant->government_id }}</span>,
-                        asistió a la jornada titulada
-                        <span class="highlight">“{{ $conference->title }}”</span>
-                        en la institución
-                        <span class="highlight">“Instituto de Profesorado Sedes Sapientiae”</span>,
-                        en los días
-                        <span class="highlight">
-                            {{ \Carbon\Carbon::parse($conference->starts_at)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
-                            a
-                            {{ \Carbon\Carbon::parse($conference->ends_at)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
-                        </span>.
-                    </p>
-
-                    <div class="institution-footer">
-                        Instituto de Profesorado Sedes Sapientiae
-                        <small>Generado por <a href="https://github.com/Agora-Sedes/Agora">Ágora</a></small>
-                    </div>
-
                 </div>
-                <!-- /content-cell -->
+
+                <div class="spacing"></div>
+
+                <p class="body-text">
+                    Se deja constancia para ser presentada a la autoridad que corresponda que
+                    <span class="highlight">{{ $attendant->full_name }}</span>,
+                    N° DNI <span class="highlight">{{ $attendant->government_id }}</span>,
+                    asistió a la jornada titulada
+                    <span class="highlight">“{{ $conference->title }}”</span>
+                    en la institución
+                    <span class="highlight">“Instituto de Profesorado Sedes Sapientiae”</span>,
+                    en los días
+                    <span class="highlight">
+                        {{ \Carbon\Carbon::parse($conference->starts_at)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
+                        a
+                        {{ \Carbon\Carbon::parse($conference->ends_at)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
+                    </span>.
+                </p>
+
+                <div class="spacing"></div>
+
+                <div class="institution-footer">
+                    Instituto de Profesorado Sedes Sapientiae
+                    <small>Generado por <a href="https://github.com/Agora-Sedes/Agora">Ágora</a></small>
+                </div>
+
+                <img
+                    id="qr-code"
+                    src="data:image/png;base64,{{ $qrCode }}"
+                    alt="QR de verificación"
+                    width="150"
+                    height="150"
+                >
+                <div class="spacing"></div>
             </div>
-            <!-- /content-table -->
+        <!-- /content -->
 
         </div>
         <!-- /border-frame -->
