@@ -35,7 +35,7 @@ class VerifyPaymentMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Verificá tu pago - Jornada Ágora');
+        return new Envelope(subject: 'Verificá tu pago - Ágora');
     }
 
     public function content(): Content

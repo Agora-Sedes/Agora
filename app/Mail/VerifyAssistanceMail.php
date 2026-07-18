@@ -17,7 +17,7 @@ class VerifyAssistanceMail extends Mailable
 
     public readonly string $verificationPayload;
     public readonly string $qrCode;
-    public readonly bool $isVirtual;
+    public readonly bool $isOnline;
     public readonly string $conferenceUrl;
 
     public function __construct(
@@ -38,7 +38,7 @@ class VerifyAssistanceMail extends Mailable
         );
 
         // Si el asistente se inscribió como virtual, incluimos el link a la conferencia.
-        $this->isVirtual = $attendant->mode === 'online';
+        $this->isOnline = $attendant->mode === 'online';
         $this->conferenceUrl = route('conferences.stream', [
             'id' => $attendant->conference_id,
             'token' => $token,
@@ -48,7 +48,7 @@ class VerifyAssistanceMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Verificá tu asistencia - Jornada Ágora'
+            subject: 'Verificá tu asistencia - Ágora'
         );
     }
 
@@ -58,11 +58,8 @@ class VerifyAssistanceMail extends Mailable
             view: 'emails.verify-assistance',
             with: [
                 'qrCode' => $this->qrCode,
-                'verificationPayload' => $this->verificationPayload,
-                'isVirtual' => $this->isVirtual,
+                'isOnline' => $this->isOnline,
                 'conferenceUrl' => $this->conferenceUrl,
-                'moneyPaid' => 12000,
-                'peopleAmount' => 250,
                 'attendant' => $this->attendant,
             ]
         );
