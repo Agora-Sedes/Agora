@@ -4,8 +4,5 @@
     "type": "module",
     "devDependencies": {
         "concurrently": "^9.0.1"
-    },
-    "dependencies": {
-        "html5-qrcode": "^2.3.10"
     }
 }
