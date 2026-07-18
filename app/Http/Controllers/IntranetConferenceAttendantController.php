@@ -162,11 +162,15 @@ class IntranetConferenceAttendantController extends Controller
             return response('Inscripto no encontrado', 404);
         }
 
-        // Pendiente (is_draft) -> todavía debe pagar -> QR para verificar el pago.
-        // Confirmado -> asistencia confirmada -> QR de asistencia.
         if ($attendant->is_draft) {
-            Mail::to($attendant->email)->send(new VerifyPaymentMail(md5($attendant->government_id)));
-            $qrLabel = 'QR de verificación de pago';
+            if ($attendant->payment_method === 'mp') {
+                return redirect()
+                    ->route('intranet.conferences.attendants.list', ['id' => $conference->id])
+                    ->with('status', "No hay ningún QR que reenviar, por favor espere la respuesta de Mercado Pago.");
+            } else { // ^ early return
+                Mail::to($attendant->email)->send(new VerifyPaymentMail($attendant));
+                $qrLabel = 'QR de verificación de pago';
+            }
         } else {
             Mail::to($attendant->email)->send(new VerifyAssistanceMail($attendant));
             $qrLabel = 'QR de asistencia';
