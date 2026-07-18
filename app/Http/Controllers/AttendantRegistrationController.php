@@ -53,11 +53,10 @@ class AttendantRegistrationController extends Controller
 
         $conference = Conference::findOrFail($id);
         $conferenceId = $conference->id;
-        $isDraft = $data['payment_method'] === 'mp';
         // Referencia única de esta compra: agrupa a todos los inscriptos de este registro.
         $orderReference = (string) Str::uuid();
 
-        $attendants = DB::transaction(function () use ($conferenceId, $data, $isDraft, $orderReference) {
+        $attendants = DB::transaction(function () use ($conferenceId, $data, $orderReference) {
             $created = [];
 
             foreach ($data['participants'] as $participant) {
@@ -65,7 +64,7 @@ class AttendantRegistrationController extends Controller
                     'conference_id' => $conferenceId,
                     'order_reference' => $orderReference,
                     'mode' => $participant['mode'],
-                    'is_draft' => $isDraft,
+                    'is_draft' => true,
                     'was_present' => false,
                     'government_id' => $participant['dni'],
                     'full_name' => trim($participant['name'] . ' ' . $participant['lastname']),
