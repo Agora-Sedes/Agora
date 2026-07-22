@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Attendant;
 use App\Models\Conference;
 use App\Mail\VerifyPaymentMail;
+use App\Models\Attendant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -53,17 +53,18 @@ class AttendantRegistrationController extends Controller
 
         $conference = Conference::findOrFail($id);
         $conferenceId = $conference->id;
-        $isDraft = $data['payment_method'] === 'mp';
         // Referencia única de esta compra: agrupa a todos los inscriptos de este registro.
         $orderReference = (string) Str::uuid();
 
-        DB::transaction(function () use ($conferenceId, $data, $isDraft, $orderReference) {
+        $attendants = DB::transaction(function () use ($conferenceId, $data, $orderReference) {
+            $created = [];
+
             foreach ($data['participants'] as $participant) {
-                Attendant::create([
+                $created[] = Attendant::create([
                     'conference_id' => $conferenceId,
                     'order_reference' => $orderReference,
                     'mode' => $participant['mode'],
-                    'is_draft' => $isDraft,
+                    'is_draft' => true,
                     'was_present' => false,
                     'government_id' => $participant['dni'],
                     'full_name' => trim($participant['name'] . ' ' . $participant['lastname']),
@@ -71,6 +72,8 @@ class AttendantRegistrationController extends Controller
                     'phone_number' => $participant['phone'],
                 ]);
             }
+
+            return $created;
         });
 
         if ($data['payment_method'] === 'mp') {
@@ -78,9 +81,13 @@ class AttendantRegistrationController extends Controller
             return redirect()->away($initPoint);
         } // ^ early return
 
-        foreach ($data['participants'] as $participant) {
-            $inscriptionId = md5($participant['dni']);
-            Mail::to($participant['email'])->send(new VerifyPaymentMail($inscriptionId));
+        // Pago en efectivo: la inscripción queda confirmada en el momento.
+        // Registramos el pago (necesario para el QR de verificación) y mandamos el mail.
+        foreach ($attendants as $attendant) {
+            $attendant->payment_id = (string) $attendant->id;
+            $attendant->save();
+
+            Mail::to($attendant->email)->send(new VerifyPaymentMail($attendant));
         }
 
         return view('conferences.register.success', [

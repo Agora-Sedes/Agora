@@ -57,6 +57,9 @@ Route::middleware(IntranetAuth::class)->group(function () {
         Route::delete('/intranet/conferences/{id}', 'delete')->name('intranet.conferences.delete');
         Route::get('/intranet/conferences/{id}/dashboard', 'dashboard')->name('intranet.conferences.dashboard');
         Route::get('/intranet/conferences/{id}/qr-scan', 'qrScan')->name('intranet.conferences.qr-scan');
+        Route::get('/intranet/conferences/{id}/qr-scan/lookup', 'qrScanLookup')->name('intranet.conferences.qr-scan.lookup');
+        Route::post('/intranet/conferences/{id}/qr-scan/mark-paid', 'qrScanMarkPaid')->name('intranet.conferences.qr-scan.mark-paid');
+        Route::post('/intranet/conferences/{id}/qr-scan/confirm', 'qrScanConfirm')->name('intranet.conferences.qr-scan.confirm');
     });
 
     Route::controller(IntranetConferenceAttendantController::class)->group(function () {
@@ -70,12 +73,6 @@ Route::middleware(IntranetAuth::class)->group(function () {
 
         Route::post('/intranet/conferences/{id}/attendants/{attendantId}/resend-qr', 'resendQr')->name('intranet.conferences.attendants.resend-qr');
         Route::post('/intranet/conferences/{id}/attendants/{attendantId}/send-certificate', 'sendCertificate')->name('intranet.conferences.attendants.send-certificate');
-    });
-
-    Route::controller(IntranetConferenceStreamController::class)->group(function () {
-        Route::get('/intranet/conferences/{id}/stream', 'edit')->name('intranet.conferences.stream.edit');
-        Route::post('/intranet/conferences/{id}/stream', 'update')->name('intranet.conferences.stream.update');
-        Route::post('/intranet/conferences/{id}/stream/stop', 'stop')->name('intranet.conferences.stream.stop');
     });
 
     Route::controller(IntranetConferenceStreamController::class)->group(function () {

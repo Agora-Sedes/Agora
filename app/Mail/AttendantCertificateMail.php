@@ -6,7 +6,6 @@ use App\Models\Attendant;
 use App\Models\Conference;
 use Exception;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -14,12 +13,16 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Crypt;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class AttendantCertificateMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $pdf = null;
+    public readonly string $verificationPayload;
+    public readonly string $qrCode;
 
     /**
      * Create a new message instance.
@@ -28,10 +31,22 @@ class AttendantCertificateMail extends Mailable
         public readonly Conference $conference,
         public readonly Attendant $attendant,
     ) {
+        $this->verificationPayload = Crypt::encryptString(json_encode([
+            'userId' => $attendant->id,
+            'conferenceId' => $attendant->conference_id,
+            'paymentId' => $attendant->payment_id,
+        ], JSON_UNESCAPED_UNICODE));
+
+        $this->qrCode = base64_encode(
+            QrCode::format('png')
+                ->size(250)
+                ->generate($this->verificationPayload)
+        );
 
         $htmlContent = view('emails.attendant-certificate-mail', [
             'attendant' => $attendant,
             'conference' => $conference,
+            'qrCode' => $this->qrCode,
         ])->render();
 
         try {

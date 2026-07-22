@@ -25,6 +25,7 @@ class AttendantFactory extends Factory
             'email' => fake()->safeEmail(),
             'phone_number' => fake()->phoneNumber(),
             'mode' => fake()->randomElement(["irl", "online"]),
+            'payment_method' => fake()->randomElement(['mp','cash']),
         ];
     }
 }

@@ -57,6 +57,7 @@ class ExternalMercadoPagoController extends Controller
                 'id'     => $payment->id,
                 'status' => $payment->status,
                 'payer'  => $payment->payer->email ?? null,
+                'external_reference' => $payment->external_reference ?? null,
             ]);
 
             // Procesar el pago SOLO cuando fue aprobado.
@@ -79,10 +80,10 @@ class ExternalMercadoPagoController extends Controller
 
             if ($aprobado && $attendants->isNotEmpty()) {
                 foreach ($attendants as $attendant) {
-                    // El pago se concretó: dejan de ser borrador (pasan a "Confirmado").
-                    if ($attendant->is_draft) {
-                        $attendant->update(['is_draft' => false]);
-                    }
+                    $attendant->update([
+                        'is_draft' => false,
+                        'payment_id' => (string) $payment->id,
+                    ]);
 
                     Log::debug('[MP webhook] >>> ENVIANDO mail', ['to' => $attendant->email]);
                     Mail::to($attendant->email)

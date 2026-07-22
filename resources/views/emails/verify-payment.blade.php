@@ -21,5 +21,9 @@
         >
     </div>
 
+    <p style="font-size: 12px; color: #666;">
+        Inscripto: {{ $attendant->full_name }}
+    </p>
+
 </body>
 </html>
