@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VerifyAssistanceMail;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Attendant;
 use App\Models\Conference;
 use App\Models\Talk;
@@ -199,6 +201,8 @@ class IntranetConferenceController extends Controller
 
         $attendant->is_draft = false;
         $attendant->save();
+
+        Mail::to($attendant->email)->send(new VerifyAssistanceMail($attendant));
 
         return response()->json([
             'ok' => true,
