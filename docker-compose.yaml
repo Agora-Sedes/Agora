@@ -1,13 +1,10 @@
-# --- SETUP ---
-# In one terminal run the following to start every service:
-# $ podman compose up --build --build-arg '--format docker'
+# Open a browser in the URL http://localhost:8000 to see the app
 # In another terminal, use the following to run `php artisan` commands:
 # $ podman compose exec app sh
-# Open a browser in the URL http://localhost:8000 to see the app
 version: "3"
 services:
   app:
-    build: .
+    image: localhost/agora_app:latest
     depends_on:
       database:
           condition: service_healthy
@@ -27,7 +24,8 @@ services:
   database:
     image: mariadb:lts-ubi
     environment:
-      MARIADB_ROOT_PASSWORD: password
+      # Loaded automatically from the .env file
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
       # Change this in production (also on the .env)
     networks:
       - app-network
