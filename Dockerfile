@@ -38,4 +38,8 @@ HEALTHCHECK --interval=5m --timeout=3s --start-period=30s --retries=5 \
   CMD curl --head --fail-with-body http://localhost:8000
 
 WORKDIR /app
-CMD ["/bin/sh", "-c", "php artisan migrate:fresh --force --seed && composer run dev"]
+ENV IN_PRODUCTION=False
+CMD if [ "$IN_PRODUCTION" = 'True' ]; \
+    then composer run dev; \
+    else php artisan migrate:fresh --force --seed && composer run dev; \
+    fi

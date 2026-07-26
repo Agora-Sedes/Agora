@@ -1,3 +1,5 @@
+production-data/*
+!production-data/.keep
 *.log
 .DS_Store
 .env

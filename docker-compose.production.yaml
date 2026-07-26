@@ -5,6 +5,10 @@ version: "3"
 services:
   app:
     image: localhost/agora_app:latest
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
+      IN_PRODUCTION: true
     depends_on:
       database:
           condition: service_healthy
@@ -17,7 +21,6 @@ services:
       - "5173:5173"
     volumes:
       - .:/app
-      # Store database in production
     networks:
       - app-network
 
@@ -26,9 +29,10 @@ services:
     environment:
       # Loaded automatically from the .env file
       MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
-      # Change this in production (also on the .env)
     networks:
       - app-network
+    volumes:
+      - production-database-data:/var/lib/mysql
     healthcheck:
         test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
         interval: 10s
@@ -52,3 +56,5 @@ services:
 
 networks:
   app-network:
+volumes:
+  production-database-data:
