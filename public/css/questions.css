@@ -160,7 +160,16 @@
   border-radius: var(--radius);
   display: grid;
   gap: 10px;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.question-admin-item--pinned {
+  border-left: 4px solid var(--blue);
+  background-color: #f0f7ff;
+}
+
+.question-admin-item--pinned .question-body {
+  font-weight: 600;
 }
 
 .question-admin-item.question-status--answered {
@@ -297,4 +306,52 @@
     width: 100%;
     text-align: center;
   }
+}
+
+/* --- Drag handle -------------------------------------------------------- */
+
+.question-drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  user-select: none;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.question-drag-handle:active {
+  cursor: grabbing;
+}
+
+.question-admin-item.dragging .question-drag-handle {
+  cursor: grabbing;
+}
+
+/* --- SortableJS ghost --------------------------------------------------- */
+
+.question-ghost {
+  opacity: 0.4;
+  border: 2px dashed var(--blue);
+  background-color: #e8f0fe;
+}
+
+/* --- Pin button --------------------------------------------------------- */
+
+.btn--pin {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  min-width: 44px;
+}
+
+.btn--pin:hover:not(:disabled) {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.btn--pinned {
+  border-color: var(--blue);
+  color: var(--blue);
+  background-color: #e8f0fe;
 }
