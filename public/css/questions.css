@@ -136,6 +136,17 @@
   color: #a8071a;
 }
 
+/* --- Admin: encabezado lista de preguntas ----------------------------------------- */
+
+.questions-header {
+    display: flex;
+    align-items: center;
+}
+
+.questions-header h2 {
+    flex: 1;
+}
+
 /* --- Admin: lista de preguntas ----------------------------------------- */
 
 .questions-admin-list {
@@ -158,9 +169,19 @@
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: 10px;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.question-admin-item--pinned {
+  border-left: 4px solid var(--blue);
+  background-color: #f0f7ff;
+}
+
+.question-admin-item--pinned .question-body {
+  font-weight: 600;
 }
 
 .question-admin-item.question-status--answered {
@@ -174,19 +195,8 @@
   flex-wrap: wrap;
 }
 
-.question-id {
-  font-family: ui-monospace, "Courier New", monospace;
-  font-size: 0.75rem;
-  color: var(--navy);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  padding: 2px 6px;
-  border-radius: 2px;
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-}
-
 .question-body {
+  flex: 1;
   font-size: 0.95rem;
   line-height: 1.45;
   word-break: break-word;
@@ -200,17 +210,14 @@
 
 .question-status-badge {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  padding: 0px 7px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: 900;
 }
 
 .question-status-badge.question-status--pending {
-  background-color: var(--yellow);
-  color: var(--navy);
+  display: none;
 }
 
 .question-status-badge.question-status--answered {
@@ -220,6 +227,7 @@
 
 .question-admin-controls {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -258,10 +266,19 @@
   background-color: transparent;
   border: 1px solid #d63333;
   color: #a8071a;
+  font-weight: 900;
 }
 
 .btn--danger:hover:not(:disabled) {
   background-color: #fff2f0;
+}
+
+/* --- Admin: botón answer ----------------------------------------------- */
+
+.btn--answer {
+  background-color: var(--blue);
+  color: white;
+  font-weight: 900;
 }
 
 /* --- Botón chico ------------------------------------------------------- */
@@ -297,4 +314,52 @@
     width: 100%;
     text-align: center;
   }
+}
+
+/* --- Drag handle -------------------------------------------------------- */
+
+.question-drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  user-select: none;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.question-drag-handle:active {
+  cursor: grabbing;
+}
+
+.question-admin-item.dragging .question-drag-handle {
+  cursor: grabbing;
+}
+
+/* --- SortableJS ghost --------------------------------------------------- */
+
+.question-ghost {
+  opacity: 0.4;
+  border: 2px dashed var(--blue);
+  background-color: #e8f0fe;
+}
+
+/* --- Pin button --------------------------------------------------------- */
+
+.btn--pin {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  min-width: 44px;
+}
+
+.btn--pin:hover:not(:disabled) {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.btn--pinned {
+  border-color: var(--blue);
+  color: var(--blue);
+  background-color: #e8f0fe;
 }

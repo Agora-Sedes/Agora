@@ -70,11 +70,8 @@
 
     <div id="questions-admin" class="questions-panel">
         <div class="questions-header">
-            <h2>Todas las preguntas</h2>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span class="questions-count">0</span>
-                <button class="questions-refresh">Actualizar</button>
-            </div>
+            <h2>Todas las preguntas (<span class="questions-count">0</span>)</h2>
+            <button class="questions-refresh">Actualizar</button>
         </div>
 
         <p class="questions-notice" style="display: none;"></p>
@@ -90,5 +87,6 @@
     <script>
         window.__CONFERENCE_ID__ = {{ (int) $conference['id'] }};
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="{{ url('js/questions.js') }}"></script>
 @endpush

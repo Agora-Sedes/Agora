@@ -106,8 +106,8 @@ class IntranetConferenceStreamController extends Controller
 
         $questions = Question::query()
             ->where('conference_id', $id)
-            ->latest()
-            ->get(['id', 'body', 'status', 'created_at']);
+            ->ordered()
+            ->get(['id', 'body', 'status', 'pinned', 'position', 'created_at']);
 
         return response()->json($questions);
     }
@@ -129,6 +129,7 @@ class IntranetConferenceStreamController extends Controller
         $validated = $request->validate([
             'status' => ['nullable', 'in:pending,answered'],
             'body' => ['nullable', 'string', 'min:1', 'max:280'],
+            'pinned' => ['nullable', 'boolean'],
         ]);
 
         if (isset($validated['status'])) {
@@ -137,10 +138,13 @@ class IntranetConferenceStreamController extends Controller
         if (isset($validated['body'])) {
             $question->body = trim($validated['body']);
         }
+        if (isset($validated['pinned'])) {
+            $question->pinned = $validated['pinned'];
+        }
 
         $question->save();
 
-        return response()->json($question->only(['id', 'body', 'status', 'created_at']));
+        return response()->json($question->only(['id', 'body', 'status', 'pinned', 'position', 'created_at']));
     }
 
     public function destroyQuestion(int $id, int $qid): JsonResponse
@@ -158,6 +162,26 @@ class IntranetConferenceStreamController extends Controller
         }
 
         $question->delete();
+
+        return response()->json([], 204);
+    }
+
+    public function reorderQuestions(Request $request, int $id): JsonResponse
+    {
+        $conference = Conference::find($id);
+
+        if (is_null($conference)) {
+            return response()->json(['error' => 'Conferencia no encontrada'], 404);
+        }
+
+        $validated = $request->validate([
+            'order' => ['required', 'array'],
+            'order.*' => ['integer', 'exists:questions,id'],
+        ]);
+
+        foreach ($validated['order'] as $index => $qId) {
+            Question::where('conference_id', $id)->where('id', $qId)->update(['position' => $index]);
+        }
 
         return response()->json([], 204);
     }

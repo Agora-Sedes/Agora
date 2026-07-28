@@ -15,6 +15,8 @@
 
   const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
+  let sortableInstance = null;
+
   function apiUrl(path) {
     return `/api/conferences/${conferenceId}/manage/questions${path}`;
   }
@@ -55,7 +57,7 @@
     renderAdminQuestions();
   }
 
-  // --- Admin: update question status ---
+  // --- Admin: update question ---
   async function updateQuestion(qId, payload) {
     const data = await fetchJSON(apiUrl(`/${qId}`), {
       method: 'PATCH',
@@ -69,16 +71,24 @@
     await fetchJSON(apiUrl(`/${qId}`), { method: 'DELETE' });
   }
 
+  // --- Admin: reorder questions ---
+  async function reorderQuestions(order) {
+    await fetchJSON(apiUrl('/reorder'), {
+      method: 'POST',
+      body: JSON.stringify({ order }),
+    });
+  }
+
   // --- Time formatting ---
   function relativeTime(dateStr) {
     const d = new Date(dateStr);
     const now = new Date();
     const diffMs = now - d;
     const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return 'ahora';
-    if (diffMin < 60) return `hace ${diffMin} min`;
+    if (diffMin < 1) return 'Recién';
+    if (diffMin < 60) return `Hace ${diffMin} min`;
     const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `hace ${diffHr} h`;
+    if (diffHr < 24) return `Hace ${diffHr} h`;
     return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
   }
 
@@ -161,24 +171,27 @@
 
     if (questions.length === 0) {
       listEl.innerHTML = '<li class="question-empty">No hay preguntas aún.</li>';
+      destroySortable();
       return;
     }
 
     listEl.innerHTML = questions.map(q => {
       const isAnswered = q.status === 'answered';
-      const statusLabel = isAnswered ? 'Respondida' : 'Pendiente';
+      const isPinned = q.pinned;
+      const statusLabel = isAnswered ? '✔' : '';
       const statusClass = isAnswered ? 'question-status--answered' : 'question-status--pending';
       return `
-        <li class="question-admin-item ${statusClass}">
+        <li class="question-admin-item ${statusClass}${isPinned ? ' question-admin-item--pinned' : ''}" data-id="${q.id}">
           <div class="question-admin-meta">
-            <span class="question-id">#${q.id}</span>
+            <span class="question-drag-handle" title="Arrastrar para reordenar">⠿</span>
             <span class="question-status-badge ${statusClass}">${statusLabel}</span>
-            <time class="question-time">${relativeTime(q.created_at)}</time>
           </div>
           <p class="question-body">${escapeHtml(q.body)}</p>
           <div class="question-admin-controls">
-            ${!isAnswered ? `<button class="btn btn--sm btn--accent" data-action="answer" data-id="${q.id}">Marcar respondida</button>` : ''}
-            <button class="btn btn--sm btn--danger" data-action="delete" data-id="${q.id}">Eliminar</button>
+            <span class="question-time">${relativeTime(q.created_at)}</span>
+            ${!isAnswered ? `<button class="btn btn--sm btn--answer" data-action="answer" data-id="${q.id}">✔</button>` : ''}
+            <button class="btn btn--sm btn--pin ${isPinned ? 'btn--pinned' : ''}" data-action="pin" data-id="${q.id}">📌</button>
+            <button class="btn btn--sm btn--danger" data-action="delete" data-id="${q.id}">✕</button>
           </div>
         </li>
       `;
@@ -187,6 +200,45 @@
     listEl.querySelectorAll('[data-action]').forEach(btn => {
       btn.addEventListener('click', handleAdminAction);
     });
+
+    initSortable();
+  }
+
+  function initSortable() {
+    const listEl = adminPanel.querySelector('.questions-admin-list');
+    if (!listEl || listEl.children.length === 0) return;
+    if (listEl.querySelector('.question-empty')) return;
+
+    destroySortable();
+
+    sortableInstance = new Sortable(listEl, {
+      handle: '.question-drag-handle',
+      animation: 200,
+      ghostClass: 'question-ghost',
+      onEnd: async (evt) => {
+        const items = [...listEl.querySelectorAll('.question-admin-item')];
+        const order = items.map(el => parseInt(el.dataset.id, 10));
+        try {
+          await reorderQuestions(order);
+          await fetchAllQuestions();
+        } catch (err) {
+          const noticeEl = adminPanel.querySelector('.questions-notice');
+          if (noticeEl) {
+            noticeEl.textContent = 'Error al reordenar: ' + err.message;
+            noticeEl.className = 'questions-notice questions-notice--error';
+            noticeEl.style.display = '';
+          }
+          await fetchAllQuestions();
+        }
+      },
+    });
+  }
+
+  function destroySortable() {
+    if (sortableInstance) {
+      sortableInstance.destroy();
+      sortableInstance = null;
+    }
   }
 
   async function handleAdminAction(e) {
@@ -195,7 +247,7 @@
     const qId = parseInt(btn.dataset.id, 10);
 
     if (action === 'delete') {
-      if (!confirm('¿Eliminar la pregunta #' + qId + '?')) return;
+      if (!confirm('¿Está seguro de que quiere eliminar la pregunta?')) return;
     }
 
     btn.disabled = true;
@@ -205,6 +257,9 @@
         await updateQuestion(qId, { status: 'answered' });
       } else if (action === 'delete') {
         await deleteQuestion(qId);
+      } else if (action === 'pin') {
+        const q = questions.find(q => q.id === qId);
+        await updateQuestion(qId, { pinned: !q.pinned });
       }
       await fetchAllQuestions();
     } catch (err) {
