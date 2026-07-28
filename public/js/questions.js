@@ -85,10 +85,10 @@
     const now = new Date();
     const diffMs = now - d;
     const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return 'ahora';
-    if (diffMin < 60) return `hace ${diffMin} min`;
+    if (diffMin < 1) return 'Recién';
+    if (diffMin < 60) return `Hace ${diffMin} min`;
     const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `hace ${diffHr} h`;
+    if (diffHr < 24) return `Hace ${diffHr} h`;
     return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
   }
 
@@ -178,21 +178,20 @@
     listEl.innerHTML = questions.map(q => {
       const isAnswered = q.status === 'answered';
       const isPinned = q.pinned;
-      const statusLabel = isAnswered ? 'Respondida' : 'Pendiente';
+      const statusLabel = isAnswered ? '✔' : '';
       const statusClass = isAnswered ? 'question-status--answered' : 'question-status--pending';
       return `
         <li class="question-admin-item ${statusClass}${isPinned ? ' question-admin-item--pinned' : ''}" data-id="${q.id}">
           <div class="question-admin-meta">
             <span class="question-drag-handle" title="Arrastrar para reordenar">⠿</span>
-            <span class="question-id">#${q.id}</span>
             <span class="question-status-badge ${statusClass}">${statusLabel}</span>
-            <time class="question-time">${relativeTime(q.created_at)}</time>
           </div>
           <p class="question-body">${escapeHtml(q.body)}</p>
           <div class="question-admin-controls">
-            <button class="btn btn--sm btn--pin ${isPinned ? 'btn--pinned' : ''}" data-action="pin" data-id="${q.id}">${isPinned ? '📌' : 'Pin'}</button>
-            ${!isAnswered ? `<button class="btn btn--sm btn--accent" data-action="answer" data-id="${q.id}">Marcar respondida</button>` : ''}
-            <button class="btn btn--sm btn--danger" data-action="delete" data-id="${q.id}">Eliminar</button>
+            <span class="question-time">${relativeTime(q.created_at)}</span>
+            ${!isAnswered ? `<button class="btn btn--sm btn--answer" data-action="answer" data-id="${q.id}">✔</button>` : ''}
+            <button class="btn btn--sm btn--pin ${isPinned ? 'btn--pinned' : ''}" data-action="pin" data-id="${q.id}">📌</button>
+            <button class="btn btn--sm btn--danger" data-action="delete" data-id="${q.id}">✕</button>
           </div>
         </li>
       `;
@@ -248,7 +247,7 @@
     const qId = parseInt(btn.dataset.id, 10);
 
     if (action === 'delete') {
-      if (!confirm('¿Eliminar la pregunta #' + qId + '?')) return;
+      if (!confirm('¿Está seguro de que quiere eliminar la pregunta?')) return;
     }
 
     btn.disabled = true;
